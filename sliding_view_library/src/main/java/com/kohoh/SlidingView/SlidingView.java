@@ -16,12 +16,14 @@ import android.view.ViewConfiguration;
 import android.view.animation.Interpolator;
 import android.widget.FrameLayout;
 import android.widget.Scroller;
+
 import com.kohoh.util.GestureUtil;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-public class SlidingLayer extends FrameLayout {
+public class SlidingView extends FrameLayout {
     private static final boolean DEBUG = false;
     private static final int MAX_SCROLLING_DURATION = 600; // in ms
     private static final int MIN_DISTANCE_FOR_FLING = 25; // in dip
@@ -57,52 +59,100 @@ public class SlidingLayer extends FrameLayout {
     private int rightSlideBound;
     private int bottomSlideBound;
 
-    public SlidingLayer(Context context) {
+    /**
+     * 构建一个SlidingView。<br>
+     * 这会生成一个的默认样式如下的SlidingView
+     * <ol>
+     * <p/>
+     * <li>允许滑动</li>
+     * <li>允许拖拽</li>
+     * <li>不允许强制拦截手势</li>
+     * <li>初始位置为[0,0]</li>
+     * <li>滑动范围被限制在距离初始位置周围0个坐标范围内</li>
+     * </ol>
+     *
+     * @param context 想关联的Context
+     */
+    public SlidingView(Context context) {
         this(context, null);
     }
 
-    public SlidingLayer(Context context, AttributeSet attrs) {
+    /**
+     * 构建一个SlidingView,并设置他的初始位置<br>
+     * 这会生成一个的默认样式如下的SlidingView
+     * <ol>
+     * <p/>
+     * <li>允许滑动</li>
+     * <li>允许拖拽</li>
+     * <li>不允许强制拦截手势</li>
+     * <li>滑动范围被限制在距离初始位置周围0个坐标范围内</li>
+     * </ol>
+     *
+     * @param context  想关联的Context
+     * @param initialX 初始位置的x轴坐标
+     * @param initialY 初始位置的y轴坐标
+     */
+    public SlidingView(Context context, int initialX, int initialY) {
+        this(context, null);
+        if (mPositionManager.removePosition(mPositionManager.POSITION_INITIAL)) {
+            mPositionManager.addPosition(mPositionManager.POSITION_INITIAL, new Coordinate(initialX, initialY));
+        }
+    }
+
+    /**
+     * 构建一个SlidingView，一般当你在.xml中声明该类时，系统会调用这个构建函数。<br>
+     * 如果你没有设置额外的属性，那么他的默认样式是
+     * <ol>
+     * <p/>
+     * <li>允许滑动</li>
+     * <li>允许拖拽</li>
+     * <li>不允许强制拦截手势</li>
+     * <li>初始位置为[0,0]</li>
+     * <li>滑动范围被限制在距离初始位置周围0个坐标范围内</li>
+     * </ol>
+     *
+     * @param context 想关联的Context
+     * @param attrs   从.xml文件中获取的和布局相关的属性集合
+     */
+    public SlidingView(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
     /**
-     * Constructor for the sliding layer.<br>
-     * By default this panel will
+     * 构建一个SlidingView，一般当你在.xml中声明该类时，系统会调用这个构建函数。<br>
+     * 如果你没有设置额外的属性，那么他的默认样式是
      * <ol>
      * <p/>
-     * <li>Use no shadow drawable. (i.e. with width of 0)</li>
-     * <li>Close when the panel is tapped</li>
-     * <li>Open when the offset is tapped, but will have an offset of 0</li>
+     * <li>允许滑动</li>
+     * <li>允许拖拽</li>
+     * <li>不允许强制拦截手势</li>
+     * <li>初始位置为[0,0]</li>
+     * <li>滑动范围被限制在距离初始位置周围0个坐标范围内</li>
      * </ol>
      *
-     * @param context  a reference to an existing context
-     * @param attrs    attribute set constructed from attributes set in android .xml file
-     * @param defStyle style res id
+     * @param context  想关联的Context
+     * @param attrs    从.xml文件中获取的和布局相关的属性集合
+     * @param defStyle 默认的设计样式的Id
      */
-    public SlidingLayer(Context context, AttributeSet attrs, int defStyle) {
+    public SlidingView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
 
-        // Style
-        final TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.SlidingLayer);
-
-        int initialX = (int) ta.getDimension(R.styleable.SlidingLayer_initialX, 0);
-        int initialY = (int) ta.getDimension(R.styleable.SlidingLayer_initialY, 0);
-        leftSlideBound = (int) ta.getDimension(R.styleable.SlidingLayer_leftSlideBound, initialX);
-        rightSlideBound = (int) ta.getDimension(R.styleable.SlidingLayer_rightSlideBound, initialX);
-        topSlideBound = (int) ta.getDimension(R.styleable.SlidingLayer_topSlideBound, initialY);
-        bottomSlideBound = (int) ta.getDimension(R.styleable.SlidingLayer_bottomSlideBound, initialY);
-
-        mEnableDrag = ta.getBoolean(R.styleable.SlidingLayer_dragEnable, true);
-        mEnableSlide = ta.getBoolean(R.styleable.SlidingLayer_slideEnable, true);
-        mEnableInterceptAllGesture = ta.getBoolean(R.styleable.SlidingLayer_interceptAllGestureEnable, false);
-
+        final TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.SlidingView);
+        int initialX = (int) ta.getDimension(R.styleable.SlidingView_initialX, 0);
+        int initialY = (int) ta.getDimension(R.styleable.SlidingView_initialY, 0);
+        leftSlideBound = (int) ta.getDimension(R.styleable.SlidingView_leftSlideBound, initialX);
+        rightSlideBound = (int) ta.getDimension(R.styleable.SlidingView_rightSlideBound, initialX);
+        topSlideBound = (int) ta.getDimension(R.styleable.SlidingView_topSlideBound, initialY);
+        bottomSlideBound = (int) ta.getDimension(R.styleable.SlidingView_bottomSlideBound, initialY);
+        mEnableDrag = ta.getBoolean(R.styleable.SlidingView_dragEnable, true);
+        mEnableSlide = ta.getBoolean(R.styleable.SlidingView_slideEnable, true);
+        mEnableInterceptAllGesture = ta.getBoolean(R.styleable.SlidingView_interceptAllGestureEnable, false);
         mPositionManager = new PositionManager(new Coordinate(initialX, initialY));
         ta.recycle();
 
         init();
     }
 
-    //TODO 需要研究
     private void init() {
         setWillNotDraw(false);
         setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
@@ -113,57 +163,175 @@ public class SlidingLayer extends FrameLayout {
         mTouchSlop = ViewConfigurationCompat.getScaledPagingTouchSlop(configuration);
         mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
         mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
-
         final float density = context.getResources().getDisplayMetrics().density;
         mFlingDistance = (int) (MIN_DISTANCE_FOR_FLING * density);
-
     }
 
-    public boolean isSlideEnabled() {
+    /**
+     * 判断SlidingView是否可以滑动
+     * <p>如果返回false，无论是调用代码进行开合还是拖拽都无法滑动SlidingView</p>
+     *
+     * @return fals 不可以滑动
+     * @see #setSlideEnable(boolean)
+     */
+    public boolean isSlideEnable() {
         return mEnableSlide;
     }
 
-    public void setSlideEnabled(boolean _enabled) {
-        mEnableSlide = _enabled;
+    /**
+     * 设置SlidingView是否可以滑动
+     * <p>如果设置为false，无论是调用代码进行开合还是拖拽都无法滑动SlidingView</p>
+     *
+     * @param enable false 为不可滑动
+     * @see #isSlideEnable()
+     */
+    public void setSlideEnable(boolean enable) {
+        mEnableSlide = enable;
     }
 
+    /**
+     * 判断SlidingView是否可以被拖拽
+     * <p>如果返回false，则SlidingView是不可以被拖拽的</p>
+     *
+     * @return false 不可被拖拽
+     * @see #setDragEnable(boolean)
+     */
     public boolean isDragEnable() {
         return mEnableDrag;
     }
 
-    public void setDragEnable(boolean mEnableDrag) {
-        this.mEnableDrag = mEnableDrag;
+    /**
+     * 设置SlidingView是否可以被拖拽
+     * <p>如果设置false，则SlidingView是不可以被拖拽的</p>
+     *
+     * @param enable flase 不可被拖拽
+     * @see #isDragEnable()
+     */
+    public void setDragEnable(boolean enable) {
+        this.mEnableDrag = enable;
     }
 
+    /**
+     * 判断是否进行强制拦截手势
+     * <p>如果返回true，则对于所有手势进行拦截<br>
+     * 嵌套在内部的view将会接受不到任何手势<p/>
+     *
+     * @return true 进行强制拦截手势
+     */
     public boolean isInterceptAllGestureEnable() {
         return mEnableInterceptAllGesture;
     }
 
-    public void setInterceptAllGestureEnable(boolean mEnableForceDrag) {
-        this.mEnableInterceptAllGesture = mEnableForceDrag;
+    /**
+     * 设置是否进行强制拦截手势
+     * <p>如果设置true，则对于所有手势进行拦截<br>
+     * 嵌套在内部的view将会接受不到任何手势<p/>
+     *
+     * @param enable true 进行强制拦截手势
+     */
+    public void setInterceptAllGestureEnable(boolean enable) {
+        this.mEnableInterceptAllGesture = enable;
     }
 
-    public void addPosition(Integer positionId, int x, int y) {
+    /**
+     * 增加一个SlidingView的目标位置
+     * <p>SlidingView的默认坐标系是以视图左上角的点位原点。
+     * <br>y轴方向向上增大，方向向下减小。
+     * <br>x轴方向向左增大，方向向右减小。
+     * <br>单位为像素。
+     * <br>如果你想要知道为什么会有这么奇葩的坐标系，那是因为我是以scrollX和scrollY为参考的。</br></p>
+     *
+     * @param positionId 目标位置的Id号，通过这个Id你可以简单的标识目标位置。请不要将Id设置为-1，这已经被占用。
+     * @param x          目标位置的x轴坐标，单位像素
+     * @param y          目标位置的y轴坐标，单位像素
+     */
+    public void addPosition(int positionId, int x, int y) {
 
         mPositionManager.addPosition(positionId, new Coordinate(x, y));
     }
 
+    /**
+     * 获取SlidingView的初始位置坐标
+     * <p><br>采用的坐标系和{@link #addPosition(int, int, int)}的相同，单位为像素。
+     * <br>通过{@link #SlidingView(android.content.Context, int, int)}或者
+     * <br>.xml中的initialX和initialY属性，可以设置SlidingView的初始位置</p>
+     *
+     * @return SlidingView的初始位置坐标，如果为null的话，则没有这是初始位置坐标。
+     */
+    public Coordinate getInitialPosition() {
+        return mPositionManager.getCoordinate(mPositionManager.POSITION_INITIAL);
+    }
+
+    /**
+     * 设置SlidingView的左侧滑动范围
+     * <p>取值范围为[initialX,~）,如果设置的范围小于initialX,则最终会视为无效。
+     * <br>采用的坐标系和{@link #addPosition(int, int, int)}的相同，单位为像素。
+     * <br>initialX和initialY是SlidingView的初始位置对应的坐标。
+     * <br>通过{@link #getInitialPosition()}可是获取SlidingView的初始位置。
+     * <br>通过{@link #SlidingView(android.content.Context, int, int)}或者
+     * <br>.xml中的initialX和initialY属性，可以设置SlidingView的初始位置</p>
+     *
+     * @param leftSlideBound 左侧滑动范围
+     */
     public void setLeftSlideBound(int leftSlideBound) {
         this.leftSlideBound = leftSlideBound;
     }
 
+    /**
+     * 设置SlidingView的右侧滑动范围
+     * <p>取值范围为(~,initialX],如果设置的范围大于initialX,则最终会视为无效。
+     * <br>采用的坐标系和{@link #addPosition(int, int, int)}的相同，单位为像素。
+     * <br>initialX和initialY是SlidingView的初始位置对应的坐标。
+     * <br>通过{@link #getInitialPosition()}可是获取SlidingView的初始位置。
+     * <br>通过{@link #SlidingView(android.content.Context, int, int)}或者
+     * <br>.xml中的initialX和initialY属性，可以设置SlidingView的初始位置</p>
+     *
+     * @param rightSlideBound 右侧滑动范围
+     */
     public void setRightSlideBound(int rightSlideBound) {
         this.rightSlideBound = rightSlideBound;
     }
 
+    /**
+     * 设置SlidingView的上侧滑动范围
+     * <p>取值范围为[initial,~）,如果设置的范围小于initialY,则最终会视为无效。
+     * <br>采用的坐标系和{@link #addPosition(int, int, int)}的相同，单位为像素。
+     * <br>initialX和initialY是SlidingView的初始位置对应的坐标。
+     * <br>通过{@link #getInitialPosition()}可是获取SlidingView的初始位置。
+     * <br>通过{@link #SlidingView(android.content.Context, int, int)}或者
+     * <br>.xml中的initialX和initialY属性，可以设置SlidingView的初始位置</p>
+     *
+     * @param topSlideBound 顶侧滑动范围
+     */
     public void setTopSlideBound(int topSlideBound) {
         this.topSlideBound = topSlideBound;
     }
 
+    /**
+     * 设置SlidingView的底侧滑动范围
+     * <p>取值范围为(~,initialY],如果设置的范围大于initialY,则最终会视为无效。
+     * <br>采用的坐标系和{@link #addPosition(int, int, int)}的相同，单位为像素。
+     * <br>initialX和initialY是SlidingView的初始位置对应的坐标。
+     * <br>通过{@link #getInitialPosition()}可是获取SlidingView的初始位置。
+     * <br>通过{@link #SlidingView(android.content.Context, int, int)}或者
+     * <br>.xml中的initialX和initialY属性，可以设置SlidingView的初始位置</p>
+     *
+     * @param bottomSlideBound 底侧滑动范围
+     */
     public void setBottomSlideBound(int bottomSlideBound) {
         this.bottomSlideBound = bottomSlideBound;
     }
 
+    //TODO 增加ignoreView功能，可以忽视某些区域的触摸事件
+
+    /**
+     * <p>主要的逻辑是这样的
+     * <ol>
+     * <li>当收到ACTION_DOWN事件且正在切换位置（也就是调用了{@link #switchPosition(Integer)}），
+     * <br>那么停止切换，停留在现在位置。然后分发事件。</li>
+     * <li>当收到ACTION_UP或ACTION_CANCLE</li>
+     * </ol></p>
+     */
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (DEBUG) {
@@ -172,11 +340,20 @@ public class SlidingLayer extends FrameLayout {
 
         int action = MotionEventCompat.getActionMasked(ev);
         switch (action) {
+            /*
+             *如果正在切换位置（也就是调用了switchPosition(Integer)），
+             *那么停止切换，停留在现在位置。
+            */
+            //TODO 没有对当前的位置是否符合要求进行判断，有BUG
             case MotionEvent.ACTION_DOWN:
                 if (isSwitching) {
                     stopSwitch();
                 }
                 break;
+            /*
+             *如果没有在拖拽，而且也没有到达任何一个目标位置
+             * 那么就切换到最近的一个目标位置。
+             */
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 if (!isDragging && !mPositionManager.isAtPosition(getScrollX(), getScrollY())) {
@@ -186,6 +363,7 @@ public class SlidingLayer extends FrameLayout {
                 break;
         }
 
+        //只有在设置了进行强制拦截手势的情况下，才会对手势进行拦截
         if (mEnableInterceptAllGesture) {
             return true;
         } else {
@@ -195,10 +373,12 @@ public class SlidingLayer extends FrameLayout {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        //如果不允许滑动或者不允许拖拽，那么久乘早结束吧。
         if (!mEnableSlide || !mEnableDrag) {
             return false;
         }
 
+        //准备好拖拽前的准备工作，顺便判断一下这个触摸事件符不符合拖拽的条件
         if (!isReadyToDrag(event)) {
             return false;
         }
@@ -211,6 +391,7 @@ public class SlidingLayer extends FrameLayout {
         final int action = MotionEventCompat.getActionMasked(event);
         switch (action) {
             case MotionEvent.ACTION_DOWN:
+                //上面已经对是否满足拖拽的条件进行了判断，所以这里直接返回true
                 return true;
             case MotionEvent.ACTION_MOVE:
                 int index = MotionEventCompat.findPointerIndex(event, mActivePointerId);
@@ -218,6 +399,7 @@ public class SlidingLayer extends FrameLayout {
                 float currentY = MotionEventCompat.getY(event, index);
                 final float deltaX = mLastX - currentX;
                 final float deltaY = mLastY - currentY;
+                //第一次拖拽的距离一定要大于mTouchSlop这个阈值，如果大于这个阈值那么久开始拖拽
                 if (!isDragging) {
                     if (Math.abs(deltaX) >= mTouchSlop || Math.abs(deltaY) >= mTouchSlop) {
                         isDragging = true;
@@ -228,6 +410,12 @@ public class SlidingLayer extends FrameLayout {
                     mLastY = currentY;
                     float scrollX = getScrollX() + deltaX;
                     float scrollY = getScrollY() + deltaY;
+                    /*
+                     *将拖拽的距离限定在滑动范围内，滑动的范围由2个值决定
+                     * 一个是SlidingView自身设置的可滑动范围
+                     * 另一个是根据所有目标位置计算出的滑动范围
+                     * 取这俩个值中范围大的一个
+                     */
                     scrollX = Math.min(scrollX, Math.max(leftSlideBound, mPositionManager.leftBound));
                     scrollX = Math.max(scrollX, Math.min(rightSlideBound, mPositionManager.rightBound));
                     scrollY = Math.min(scrollY, Math.max(topSlideBound, mPositionManager.topBound));
@@ -236,6 +424,7 @@ public class SlidingLayer extends FrameLayout {
                     return true;
                 }
                 return false;
+            //最后一个手指离开时，SlidingView也许没有到达任意一个目标位置，因此需要对此处理。
             case MotionEvent.ACTION_UP:
                 if (isDragging) {
                     final VelocityTracker velocityTracker = mVelocityTracker;
@@ -247,15 +436,15 @@ public class SlidingLayer extends FrameLayout {
                     final int scrollX = getScrollX();
                     final int scrollY = getScrollY();
 
+                    //根据滑动的速率、初始位置、现在的位置，决定要到达的目标位置
                     int position = mPositionManager.determineNextPosition(initialVelocityX, initialVelocityY
                             , mInitialScrollX, mInitialScrollY, scrollX, scrollY);
                     switchPosition(position, true, true, initialVelocityX, initialVelocityY);
                     endDrag();
-                }
-                else if(!mPositionManager.isAtPosition(getScrollX(),getScrollY()))
-                {
-                    int poition = mPositionManager.guessPosition(getScrollX(),getScrollY());
-                    switchPosition(poition,true,false,0);
+                } else if (!mPositionManager.isAtPosition(getScrollX(), getScrollY())) {
+                    //如果没有滑动，但也不再任意一个目标位置，那么就找一个最近的位置作为要到达的目标位置
+                    int poition = mPositionManager.guessPosition(getScrollX(), getScrollY());
+                    switchPosition(poition, true, false, 0);
                 }
                 return true;
             case MotionEvent.ACTION_CANCEL:
@@ -389,9 +578,8 @@ public class SlidingLayer extends FrameLayout {
     @Override
     public void computeScroll() {
         if (!mScroller.isFinished()) {
-            if(!isSwitching)
-            {
-                isSwitching=true;
+            if (!isSwitching) {
+                isSwitching = true;
             }
             if (mScroller.computeScrollOffset()) {
                 final int oldX = getScrollX();
@@ -407,12 +595,9 @@ public class SlidingLayer extends FrameLayout {
                 // Keep on drawing until the animation has finished. Just re-draw the necessary part
                 invalidate(getLeft() + oldX, getTop() + oldY, getRight() - oldX, getBottom() - oldY);
             }
-        }
-        else
-        {
-            if(isSwitching)
-            {
-                isSwitching=false;
+        } else {
+            if (isSwitching) {
+                isSwitching = false;
             }
         }
     }
@@ -507,12 +692,11 @@ public class SlidingLayer extends FrameLayout {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        if((isDragging||isSwitching)&&!mDrawingCacheEnabled)
-        {
+        if ((isDragging || isSwitching) && !mDrawingCacheEnabled) {
             setDrawingCacheEnabled(true);
         }
         super.onDraw(canvas);
-        if (!isDragging && !isSwitching&&mDrawingCacheEnabled) {
+        if (!isDragging && !isSwitching && mDrawingCacheEnabled) {
             setDrawingCacheEnabled(false);
         }
     }

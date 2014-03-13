@@ -24,7 +24,7 @@
 
 <resources>
 
-    <declare-styleable name="SlidingLayer">
+    <declare-styleable name="SlidingView">
 
         <attr name="initialX" format="dimension"/>
         <attr name="initialY" format="dimension"/>
