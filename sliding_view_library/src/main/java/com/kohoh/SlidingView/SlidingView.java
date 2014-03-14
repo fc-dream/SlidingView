@@ -153,6 +153,9 @@ public class SlidingView extends FrameLayout {
         init();
     }
 
+    /**
+     * 初始化SlidingView所需要做的工作
+     */
     private void init() {
         setWillNotDraw(false);
         setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
@@ -252,9 +255,9 @@ public class SlidingView extends FrameLayout {
 
     /**
      * 获取SlidingView的初始位置坐标
-     * <p><br>采用的坐标系和{@link #addPosition(int, int, int)}的相同，单位为像素。
-     * <br>通过{@link #SlidingView(android.content.Context, int, int)}或者
-     * <br>.xml中的initialX和initialY属性，可以设置SlidingView的初始位置</p>
+     * <p>采用的坐标系和{@link #addPosition(int, int, int)}的相同，单位为像素。通过
+     * {@link #SlidingView(android.content.Context, int, int)}或者.xml中的initialX和initialY属性，
+     * 可以设置SlidingView的初始位置</p>
      *
      * @return SlidingView的初始位置坐标，如果为null的话，则没有这是初始位置坐标。
      */
@@ -264,12 +267,11 @@ public class SlidingView extends FrameLayout {
 
     /**
      * 设置SlidingView的左侧滑动范围
-     * <p>取值范围为[initialX,~）,如果设置的范围小于initialX,则最终会视为无效。
-     * <br>采用的坐标系和{@link #addPosition(int, int, int)}的相同，单位为像素。
-     * <br>initialX和initialY是SlidingView的初始位置对应的坐标。
-     * <br>通过{@link #getInitialPosition()}可是获取SlidingView的初始位置。
-     * <br>通过{@link #SlidingView(android.content.Context, int, int)}或者
-     * <br>.xml中的initialX和initialY属性，可以设置SlidingView的初始位置</p>
+     * <p>取值范围为[initialX,~）,如果设置的范围小于initialX,则最终会视为无效。采用的坐标系和
+     * {@link #addPosition(int, int, int)}的相同，单位为像素。initialX和initialY是SlidingView的初始
+     * 位置对应的坐标。通过{@link #getInitialPosition()}可是获取SlidingView的初始位置。通过
+     * {@link #SlidingView(android.content.Context, int, int)}或者.xml中的initialX和initialY属性，
+     * 可以设置SlidingView的初始位置</p>
      *
      * @param leftSlideBound 左侧滑动范围
      */
@@ -279,12 +281,11 @@ public class SlidingView extends FrameLayout {
 
     /**
      * 设置SlidingView的右侧滑动范围
-     * <p>取值范围为(~,initialX],如果设置的范围大于initialX,则最终会视为无效。
-     * <br>采用的坐标系和{@link #addPosition(int, int, int)}的相同，单位为像素。
-     * <br>initialX和initialY是SlidingView的初始位置对应的坐标。
-     * <br>通过{@link #getInitialPosition()}可是获取SlidingView的初始位置。
-     * <br>通过{@link #SlidingView(android.content.Context, int, int)}或者
-     * <br>.xml中的initialX和initialY属性，可以设置SlidingView的初始位置</p>
+     * <p>取值范围为(~,initialX],如果设置的范围大于initialX,则最终会视为无效。采用的坐标系和
+     * {@link #addPosition(int, int, int)}的相同，单位为像素。initialX和initialY是SlidingView的初始
+     * 位置对应的坐标。通过{@link #getInitialPosition()}可是获取SlidingView的初始位置。通过
+     * {@link #SlidingView(android.content.Context, int, int)}或者.xml中的initialX和initialY属性，
+     * 可以设置SlidingView的初始位置</p>
      *
      * @param rightSlideBound 右侧滑动范围
      */
@@ -294,12 +295,11 @@ public class SlidingView extends FrameLayout {
 
     /**
      * 设置SlidingView的上侧滑动范围
-     * <p>取值范围为[initial,~）,如果设置的范围小于initialY,则最终会视为无效。
-     * <br>采用的坐标系和{@link #addPosition(int, int, int)}的相同，单位为像素。
-     * <br>initialX和initialY是SlidingView的初始位置对应的坐标。
-     * <br>通过{@link #getInitialPosition()}可是获取SlidingView的初始位置。
-     * <br>通过{@link #SlidingView(android.content.Context, int, int)}或者
-     * <br>.xml中的initialX和initialY属性，可以设置SlidingView的初始位置</p>
+     * <p>取值范围为[initial,~）,如果设置的范围小于initialY,则最终会视为无效。采用的坐标系和
+     * {@link #addPosition(int, int, int)}的相同，单位为像素。initialX和initialY是SlidingView的初始
+     * 位置对应的坐标。通过{@link #getInitialPosition()}可是获取SlidingView的初始位置。通过
+     * {@link #SlidingView(android.content.Context, int, int)}或者.xml中的initialX和initialY属性，
+     * 可以设置SlidingView的初始位置</p>
      *
      * @param topSlideBound 顶侧滑动范围
      */
@@ -309,12 +309,11 @@ public class SlidingView extends FrameLayout {
 
     /**
      * 设置SlidingView的底侧滑动范围
-     * <p>取值范围为(~,initialY],如果设置的范围大于initialY,则最终会视为无效。
-     * <br>采用的坐标系和{@link #addPosition(int, int, int)}的相同，单位为像素。
-     * <br>initialX和initialY是SlidingView的初始位置对应的坐标。
-     * <br>通过{@link #getInitialPosition()}可是获取SlidingView的初始位置。
-     * <br>通过{@link #SlidingView(android.content.Context, int, int)}或者
-     * <br>.xml中的initialX和initialY属性，可以设置SlidingView的初始位置</p>
+     * <p>取值范围为(~,initialY],如果设置的范围大于initialY,则最终会视为无效。采用的坐标系和
+     * {@link #addPosition(int, int, int)}的相同，单位为像素。initialX和initialY是SlidingView的初始
+     * 位置对应的坐标。通过{@link #getInitialPosition()}可是获取SlidingView的初始位置。
+     * 通过{@link #SlidingView(android.content.Context, int, int)}或者.xml中的initialX和initialY属性，
+     * 可以设置SlidingView的初始位置</p>
      *
      * @param bottomSlideBound 底侧滑动范围
      */
@@ -324,14 +323,6 @@ public class SlidingView extends FrameLayout {
 
     //TODO 增加ignoreView功能，可以忽视某些区域的触摸事件
 
-    /**
-     * <p>主要的逻辑是这样的
-     * <ol>
-     * <li>当收到ACTION_DOWN事件且正在切换位置（也就是调用了{@link #switchPosition(Integer)}），
-     * <br>那么停止切换，停留在现在位置。然后分发事件。</li>
-     * <li>当收到ACTION_UP或ACTION_CANCLE</li>
-     * </ol></p>
-     */
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (DEBUG) {
@@ -371,6 +362,7 @@ public class SlidingView extends FrameLayout {
         }
     }
 
+    //TODO 当第二根手指不满足allDragFrmHere的条件，而第一根手指又离开的情况下。会出现一个bug
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         //如果不允许滑动或者不允许拖拽，那么久乘早结束吧。
@@ -437,7 +429,7 @@ public class SlidingView extends FrameLayout {
                     final int scrollY = getScrollY();
 
                     //根据滑动的速率、初始位置、现在的位置，决定要到达的目标位置
-                    int position = mPositionManager.determineNextPosition(initialVelocityX, initialVelocityY
+                    int position = mPositionManager.determineTargetPosition(initialVelocityX, initialVelocityY
                             , mInitialScrollX, mInitialScrollY, scrollX, scrollY);
                     switchPosition(position, true, true, initialVelocityX, initialVelocityY);
                     endDrag();
@@ -456,6 +448,10 @@ public class SlidingView extends FrameLayout {
         }
     }
 
+    /**
+     * 当要结束拖拽时，调用此方法。
+     * <p>在结束拖拽后，需要充值某些拖拽时使用的参数。这样才能保证下次拖拽顺利。</p>
+     */
     private void endDrag() {
         isDragging = false;
         if (mVelocityTracker != null) {
@@ -465,6 +461,12 @@ public class SlidingView extends FrameLayout {
         mActivePointerId = INVALID_POINTER;
     }
 
+    /**
+     * 判断是否准备好拖拽。如果没有准备好，那么久试图准备好。
+     * <p>SlidingView的拖拽都是以一个Id为{@link #mActivePointerId}的手指为参照进行的。除了在第一次
+     * 拖拽前需要做好拖拽的准备工作。当我们跟踪的手指离开屏幕，但任然哈有其他手指在屏幕上时，我们还
+     * 要寻找另外一根手指作为跟踪手指。并重新做好拖拽的准备。如果拖拽没有准备好，就不能进行拖拽。</p>
+     */
     private boolean isReadyToDrag(MotionEvent event) {
         boolean result = true;
 
@@ -551,12 +553,10 @@ public class SlidingView extends FrameLayout {
         return FloatMath.sin(f);
     }
 
+    //TODO 当SlidingView中的子view占据的大小大于所能显示的范围时，会出现bug
     /**
      * 判断是否可以从该处移动
-     *
-     * @param initialY
-     * @param initialX
-     * @return
+     *<p>只有当触摸事件对应的位置在视图上时才能进行拖拽</p>
      */
     private boolean allowSlidingFromHere(final float initialX, final float initialY) {
         boolean allow = true;
@@ -602,12 +602,18 @@ public class SlidingView extends FrameLayout {
         }
     }
 
+    /**
+     * 停止位置切换，SlidingMenu将会停留在当前的这个位置。
+     */
     private void stopSwitch() {
         if (isSwitching) {
             mScroller.abortAnimation();
         }
     }
 
+    /**
+     * 跳过动画的部分，直接完成位置切换
+     */
     private void completeSwitch() {
         if (isSwitching) {
             mScroller.abortAnimation();
@@ -621,12 +627,20 @@ public class SlidingView extends FrameLayout {
         }
     }
 
-    public void switchPosition(Integer position) {
-        switchPosition(position, true, true, 0);
+    /**
+     * 将SlidingView切换到指定的目标位置
+     * <p>默认开启动画效果，且进行强行切换</p>
+     *
+     * @param targetPosition 目标位置对应的Id
+     */
+    public void switchPosition(Integer targetPosition) {
+        switchPosition(targetPosition, true, true, 0);
     }
 
     /**
-     * @param targetPosition 目标位置
+     * 将SlidingView切换到指定的目标位置
+     *
+     * @param targetPosition 目标位置对应的Id
      * @param smoothAnim     是否使用动画效果
      * @param forceSwitch    是否强化切换位置
      * @param velocity       切换的速率
@@ -658,12 +672,30 @@ public class SlidingView extends FrameLayout {
         }
     }
 
+    /**
+     * 将SlidingView切换到指定的目标位置
+     *
+     * @param targetPosition 目标位置对应的Id
+     * @param smoothAnim     是否使用动画效果
+     * @param forceSwitch    是否强化切换位置
+     * @param velocityX      x轴的切换速率
+     * @param velocityY      y轴的切换速率
+     */
     public void switchPosition(final int targetPosition, final boolean smoothAnim, final boolean forceSwitch,
                                final int velocityX, final int velocityY) {
         int velocity = (int) Math.sqrt((velocityX * velocityX) + (velocityY * velocityY));
         switchPosition(targetPosition, smoothAnim, forceSwitch, velocity);
     }
 
+    //TODO 硬件加速和绘制缓存之间，到底使用哪一个更好。对于不同的版本如何选择。
+    /**
+     * 决定是否开启绘制缓存。
+     * 根据我的理解，在不使用硬件加速的情况下。开启绘制缓存，有助于滑动的平滑
+     * 但是这似乎并非针对所有的系统版本。我翻过源码，现在知道的是
+     * 在API leave10似乎没有这方面的优化。据此推断API leave10之前也没有优化
+     * 在API leave19有相关的优化。
+     * 限于时间问题没有再进一步的研究，放在以后和硬件加速的开关一起考虑吧
+     */
     @Override
     public void setDrawingCacheEnabled(boolean enabled) {
 
@@ -692,36 +724,75 @@ public class SlidingView extends FrameLayout {
 
     @Override
     protected void onDraw(Canvas canvas) {
+        //如果正在拖动或者切换，那么开启绘制缓存
         if ((isDragging || isSwitching) && !mDrawingCacheEnabled) {
             setDrawingCacheEnabled(true);
         }
         super.onDraw(canvas);
+        //如果没有在拖动，也没有在切换，那么关闭绘制缓存
         if (!isDragging && !isSwitching && mDrawingCacheEnabled) {
             setDrawingCacheEnabled(false);
         }
     }
 
+    /**
+     * 封装位置的坐标信息
+     */
     class Coordinate {
+        /**
+         * 构建一个坐标，并设置他的值。
+         *
+         * @param x x轴的坐标
+         * @param y y轴的坐标
+         */
         public Coordinate(int x, int y) {
             this.x = x;
             this.y = y;
         }
 
+        /**
+         * x轴的坐标
+         */
         public int x;
+        /**
+         * y轴的坐标
+         */
         public int y;
     }
 
+    /**
+     * 通过提供给一系列的方法来协助管理位置信息。
+     * <p>该类内部提供了一个Map来管理所有的位置信息。该Map以位置对于的Id作为key，位置对应的坐标作为
+     * value。你可以通过{@link #addPosition(Integer, Coordinate)}和{@link #removePosition(Integer)}
+     * 来增加和移除位置。通过{@link #getCoordinate(Integer)}获取位置信息。注意的是，该Map中默认有一
+     * 个初始位置。其位置对应的Id为{@link #POSITION_INITIAL},因此请不要添加以-1为Id的位置。初始位置
+     * 的坐标只能在构建PositionManager时设置<br>此外PositionManager还提供了一些列的方法，帮助你到达
+     * 到达目标位置。你可以通过{@link #determineTargetPosition(float, float, int, int, int, int)}
+     * {@link #guessPosition(int, int)} {@link #guessPosition(int, int, int, int)}得到你的目标位置。
+     * </p>
+     */
     class PositionManager {
 
+        /**
+         * 构建一个PositionManager，并且设置初始位置为(0,0)
+         */
         public PositionManager() {
             this(new Coordinate(0, 0));
         }
 
+        /**
+         * 构建一个PositionManager,并设置初始位置
+         *
+         * @param initialCoordinate 初始位置对应的坐标
+         */
         public PositionManager(Coordinate initialCoordinate) {
             coordinateMap = new HashMap<Integer, Coordinate>();
             addPosition(POSITION_INITIAL, initialCoordinate);
         }
 
+        /**
+         * 初始位置对应的Id
+         */
         public static final int POSITION_INITIAL = -1;
         private Map<Integer, Coordinate> coordinateMap;
         private int leftBound = Integer.MIN_VALUE;
@@ -730,6 +801,13 @@ public class SlidingView extends FrameLayout {
         private int bottomBound = Integer.MAX_VALUE;
         private Integer currentPosition = POSITION_INITIAL;
 
+        /**
+         * 增加一个位置
+         *
+         * @param positionId 位置所对应的Id。请不要设置为-1，-1默认为初始位置对应的Id。
+         * @param coordinate 位置所对应的坐标
+         * @return true 成功增加位置
+         */
         public boolean addPosition(Integer positionId, Coordinate coordinate) {
             boolean result = true;
 
@@ -744,6 +822,12 @@ public class SlidingView extends FrameLayout {
             return result;
         }
 
+        /**
+         * 移除一个位置
+         *
+         * @param positionId 位置对应的Id
+         * @return true 成功移除位置
+         */
         public boolean removePosition(Integer positionId) {
 
             boolean result = true;
@@ -756,6 +840,9 @@ public class SlidingView extends FrameLayout {
             return result;
         }
 
+        /**
+         * 根据所有位置的坐标，设置所能到达的上下左右的最大范围
+         */
         private void setBound() {
             leftBound = Integer.MIN_VALUE;
             topBound = Integer.MIN_VALUE;
@@ -774,14 +861,34 @@ public class SlidingView extends FrameLayout {
             }
         }
 
+        /**
+         * 获取对应Id的位置坐标
+         *
+         * @param positionId 位置对应的Id
+         * @return 位置对应的坐标
+         */
         public Coordinate getCoordinate(Integer positionId) {
             return coordinateMap.get(positionId);
         }
 
-        public float computeDistance(Coordinate p1, Coordinate p2) {
-            return (float) Math.sqrt(Math.pow((p1.x - p2.x), 2) + Math.pow((p1.y - p2.y), 2));
+        /**
+         * 计算两坐标之间的距离
+         *
+         * @param c1 坐标1
+         * @param c2 坐标2
+         * @return 坐标c1与坐标c2间的距离
+         */
+        public float computeDistance(Coordinate c1, Coordinate c2) {
+            return (float) Math.sqrt(Math.pow((c1.x - c2.x), 2) + Math.pow((c1.y - c2.y), 2));
         }
 
+        /**
+         * 判断当前位置是否处于所有位置之一
+         *
+         * @param currentX 当前位置的x轴坐标
+         * @param currentY 当前位置的y轴坐标
+         * @return true 处于所有位置之一
+         */
         public boolean isAtPosition(int currentX, int currentY) {
             Iterator iterator = coordinateMap.entrySet().iterator();
             while (iterator.hasNext()) {
@@ -794,6 +901,14 @@ public class SlidingView extends FrameLayout {
             return false;
         }
 
+        /**
+         * 根据当前的位置，猜测你想要到达的位置
+         * <p>此处的算法是寻找最近的一个位置作为想要到达的位置</p>
+         *
+         * @param currentX 当前位置的x轴坐标
+         * @param currentY 当前位置的y轴坐标
+         * @return 猜测想要到达的位置对应的Id
+         */
         public int guessPosition(int currentX, int currentY) {
             Coordinate currentCorrdinate = new Coordinate(currentX, currentY);
             float min = Float.MAX_VALUE;
@@ -811,6 +926,20 @@ public class SlidingView extends FrameLayout {
             return targetPosition;
         }
 
+        //TODO 算法似乎还不够好
+
+        /**
+         * 根据当前的位置，猜测你想要到达的位置
+         * <p>此处的算法是根据当前位置和滑动的起始位置，计算出滑动的方向。再计算滑动方向和从滑动的起
+         * 始位置到各个目标位置方向之间的夹角，取夹角最小的位置作为想要到达的位置。如果夹角相同取到
+         * 达距离最短的位置</p>
+         *
+         * @param initialX 滑动的起始位置的x轴坐标
+         * @param initialY 滑动的起始位置的y轴坐标
+         * @param currentX 当前位置的x轴坐标
+         * @param currentY 当前位置的y轴坐标
+         * @return 猜测想要到达的位置对应的Id
+         */
         public int guessPosition(final int initialX, final int initialY
                 , final int currentX, final int currentY) {
             Coordinate pi = new Coordinate(initialX, initialY);
@@ -843,7 +972,22 @@ public class SlidingView extends FrameLayout {
             return desirePositionId;
         }
 
-        public int determineNextPosition(float velocityX, float velocityY
+        /**
+         * 决定要到达的目标位置
+         * <p>算法首先根据滑动的起始位置和现在的位置，猜测一个想要到达的目标位置。然后判断滑动的速度
+         * 是否到达一个阈值，如果是则目标位置就是所猜测的位置。 如果速度没有达到阈值，判断已经滑动的
+         * 距离是否已经占总距离的一半，如果是，则目标位置就是所猜测的位置。否则目标位置就是滑动前的
+         * 位置。</p>
+         *
+         * @param velocityX x轴的滑动速度
+         * @param velocityY y轴的滑动速度
+         * @param initialX  滑动起始位置的x轴坐标
+         * @param initialY  滑动起始位置的y轴坐标
+         * @param currentX  当前位置的x轴坐标
+         * @param currentY  当前位置的y轴坐标
+         * @return 决定要到达的目标位置所对应的Id
+         */
+        public int determineTargetPosition(float velocityX, float velocityY
                 , int initialX, int initialY
                 , int currentX, int currentY) {
 
