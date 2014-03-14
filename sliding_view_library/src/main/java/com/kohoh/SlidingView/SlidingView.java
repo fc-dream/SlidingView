@@ -713,6 +713,8 @@ public class SlidingView extends FrameLayout {
         }
     }
 
+    //TODO 增加必要的事件监听器
+
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
