@@ -435,12 +435,12 @@ public class SlidingView extends FrameLayout {
                     int position = mPositionManager.determineTargetPosition(initialVelocityX, initialVelocityY
                             , mInitialScrollX, mInitialScrollY, scrollX, scrollY);
                     switchPosition(position, true, true, initialVelocityX, initialVelocityY);
-                    endDrag();
                 } else if (!mPositionManager.isAtPosition(getScrollX(), getScrollY())) {
                     //如果没有滑动，但也不再任意一个目标位置，那么就找一个最近的位置作为要到达的目标位置
                     int poition = mPositionManager.guessPosition(getScrollX(), getScrollY());
                     switchPosition(poition, true, false, 0);
                 }
+                endDrag();
                 return true;
             case MotionEvent.ACTION_CANCEL:
                 switchPosition(mPositionManager.currentPosition, true, true, 0);
@@ -727,7 +727,7 @@ public class SlidingView extends FrameLayout {
             mIgnoreViewSet = new HashSet<View>();
         }
 
-        if (view != null && (view.getVisibility() & VISIBLE) == 1) {
+        if (view != null && view.getVisibility()==VISIBLE) {
             handle = mIgnoreViewSet.add(view);
         }
 
