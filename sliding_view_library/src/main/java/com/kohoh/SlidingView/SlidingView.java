@@ -325,8 +325,6 @@ public class SlidingView extends FrameLayout {
         this.bottomSlideBound = bottomSlideBound;
     }
 
-    //TODO 增加ignoreView功能，可以忽视某些区域的触摸事件
-
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (DEBUG) {
