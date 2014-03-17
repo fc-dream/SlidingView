@@ -374,10 +374,8 @@ public class SlidingView extends FrameLayout {
             return false;
         }
 
-        //准备好拖拽前的准备工作，顺便判断一下这个触摸事件符不符合拖拽的条件
-        if (!isReadyToDrag(event)) {
-            return false;
-        }
+        //做好好拖拽前的准备工作
+        prepareToDrag(event);
 
         if (DEBUG) {
             GestureUtil.printEvent(event, "onTouchEvent");
@@ -397,7 +395,8 @@ public class SlidingView extends FrameLayout {
                 final float deltaY = mLastY - currentY;
                 //第一次拖拽的距离一定要大于mTouchSlop这个阈值，如果大于这个阈值那么久开始拖拽
                 if (!isDragging) {
-                    if (Math.abs(deltaX) >= mTouchSlop || Math.abs(deltaY) >= mTouchSlop) {
+                    if ((Math.abs(deltaX) >= mTouchSlop || Math.abs(deltaY) >= mTouchSlop)
+                            &&allowSlidingFromHere(mLastX,mLastY)) {
                         isDragging = true;
                     }
                 }
@@ -466,46 +465,37 @@ public class SlidingView extends FrameLayout {
     }
 
     /**
-     * 判断是否准备好拖拽。如果没有准备好，那么久试图准备好。
+     * 做好拖拽前的准备工作。
      * <p>SlidingView的拖拽都是以一个Id为{@link #mActivePointerId}的手指为参照进行的。除了在第一次
-     * 拖拽前需要做好拖拽的准备工作。当我们跟踪的手指离开屏幕，但任然哈有其他手指在屏幕上时，我们还
+     * 拖拽前需要做好拖拽的准备工作。如果我们跟踪的手指离开屏幕，但是还有其他手指在屏幕上时，我们还
      * 要寻找另外一根手指作为跟踪手指。并重新做好拖拽的准备。如果拖拽没有准备好，就不能进行拖拽。</p>
      */
-    private boolean isReadyToDrag(MotionEvent event) {
-        boolean result = true;
-
+    private void prepareToDrag(MotionEvent event) {
         if (MotionEventCompat.findPointerIndex(event, mActivePointerId) == INVALID_POINTER) {
-            result = false;
-            int count = MotionEventCompat.getPointerCount(event);
-            for (int i = 0; i < count; i++) {
-                float currentX = MotionEventCompat.getX(event, i);
-                float currentY = MotionEventCompat.getY(event, i);
-                if (allowSlidingFromHere(currentX, currentY)) {
-                    if (mVelocityTracker != null) {
-                        mVelocityTracker.clear();
-                    } else {
-                        mVelocityTracker = VelocityTracker.obtain();
-                    }
-                    mVelocityTracker.addMovement(event);
-                    mActivePointerId = MotionEventCompat.getPointerId(event, i);
-                    mInitialScrollX = getScrollX();
-                    mInitialScrollY = getScrollY();
-                    mLastX = currentX;
-                    mLastY = currentY;
-                    result = true;
-                    break;
-                }
+            int activePointerIndex=MotionEventCompat.getActionIndex(event);
+            float currentX = MotionEventCompat.getX(event, activePointerIndex);
+            float currentY = MotionEventCompat.getY(event, activePointerIndex);
+            if (mVelocityTracker != null) {
+                mVelocityTracker.clear();
+            } else {
+                mVelocityTracker = VelocityTracker.obtain();
             }
+            mVelocityTracker.addMovement(event);
+            mActivePointerId = MotionEventCompat.getPointerId(event, activePointerIndex);
+            mInitialScrollX = getScrollX();
+            mInitialScrollY = getScrollY();
+            mLastX = currentX;
+            mLastY = currentY;
         }
-        return result;
     }
 
-    /**
-     * Like {@link android.view.View#scrollBy}, but scroll smoothly instead of immediately.
-     *
-     * @param x the number of pixels to scroll by on the X axis
-     * @param y the number of pixels to scroll by on the Y axis
-     */
+        /**
+         * Like {@link android.view.View#scrollBy}, but scroll smoothly instead of immediately.
+         *
+         * @param x the number of pixels to scroll by on the X axis
+         * @param y the number of pixels to scroll by on the Y axis
+         */
+
     void smoothScrollTo(int x, int y) {
         smoothScrollTo(x, y, 0);
     }
@@ -576,6 +566,10 @@ public class SlidingView extends FrameLayout {
         }
         if (initialY > (getBottom() - getScrollY())) {
             allow = false;
+        }
+        if(whetherInIgnoreView(initialX,initialY))
+        {
+            allow=false;
         }
         return allow;
     }
