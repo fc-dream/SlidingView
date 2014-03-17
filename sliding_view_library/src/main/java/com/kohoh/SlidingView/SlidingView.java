@@ -3,6 +3,7 @@ package com.kohoh.SlidingView;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.VelocityTrackerCompat;
 import android.support.v4.view.ViewConfigurationCompat;
@@ -20,8 +21,10 @@ import android.widget.Scroller;
 import com.kohoh.util.GestureUtil;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 public class SlidingView extends FrameLayout {
     private static final boolean DEBUG = false;
@@ -58,6 +61,7 @@ public class SlidingView extends FrameLayout {
     private int topSlideBound;
     private int rightSlideBound;
     private int bottomSlideBound;
+    private Set<View> mIgnoreViewSet;
 
     /**
      * 构建一个SlidingView。<br>
@@ -554,9 +558,10 @@ public class SlidingView extends FrameLayout {
     }
 
     //TODO 当SlidingView中的子view占据的大小大于所能显示的范围时，会出现bug
+
     /**
      * 判断是否可以从该处移动
-     *<p>只有当触摸事件对应的位置在视图上时才能进行拖拽</p>
+     * <p>只有当触摸事件对应的位置在视图上时才能进行拖拽</p>
      */
     private boolean allowSlidingFromHere(final float initialX, final float initialY) {
         boolean allow = true;
@@ -688,6 +693,7 @@ public class SlidingView extends FrameLayout {
     }
 
     //TODO 硬件加速和绘制缓存之间，到底使用哪一个更好。对于不同的版本如何选择。
+
     /**
      * 决定是否开启绘制缓存。
      * 根据我的理解，在不使用硬件加速的情况下。开启绘制缓存，有助于滑动的平滑
@@ -711,6 +717,94 @@ public class SlidingView extends FrameLayout {
                 }
             }
         }
+    }
+
+    /**
+     * 忽视指定视图所在区域的拖拽手势
+     * <p>被调用之后，无法在被忽视的视图所在的区域进行拖拽</p>
+     *
+     * @param view 要忽视拖拽手势的视图
+     * @return false 忽视失败
+     */
+    public boolean addIgnoreView(View view) {
+        boolean handle = false;
+
+        if (mIgnoreViewSet == null) {
+            mIgnoreViewSet = new HashSet<View>();
+        }
+
+        if (view != null && (view.getVisibility() & VISIBLE) == 1) {
+            handle = mIgnoreViewSet.add(view);
+        }
+
+        return handle;
+    }
+
+    /**
+     * 忽视指定视图所在区域的拖拽手势
+     * <p>被调用之后，无法在被忽视的视图所在的区域进行拖拽</p>
+     *
+     * @param id 要忽视拖拽手势的视图对应的id
+     * @return false 忽视失败
+     */
+    public boolean addIgnoreView(int id) {
+        View view = findViewById(id);
+        return addIgnoreView(view);
+    }
+
+    /**
+     * 取消忽视指定视图所在区域的拖拽手势
+     * <P>指定视图所在的区域又可以重新进行拖拽了</P>
+     *
+     * @param view 要取消忽视所在区域拖拽手势的视图。
+     * @return false 取消忽视失败
+     */
+    public boolean removeIgnoreView(View view) {
+        boolean handle = false;
+
+        if (mIgnoreViewSet != null) {
+            handle = mIgnoreViewSet.remove(view);
+        }
+        return handle;
+    }
+
+    /**
+     * 取消忽视指定视图所在区域的拖拽手势
+     * <P>指定视图所在的区域又可以重新进行拖拽了</P>
+     *
+     * @param id 要取消忽视所在区域拖拽手势的视图对应的id。
+     * @return false 取消忽视失败
+     */
+    public boolean removeIgnoreView(int id) {
+        View view = findViewById(id);
+        return removeIgnoreView(view);
+    }
+
+    /**
+     * 判断该坐标位置是否在要忽视拖拽的视图所在的区域内
+     *
+     * @param x x轴所在坐标
+     * @param y y轴所在坐标
+     * @return true 忽视该位置的拖拽
+     */
+    private boolean whetherInIgnoreView(float x, float y) {
+        boolean handle = false;
+        View view;
+
+        if (mIgnoreViewSet != null) {
+            Iterator<View> iterator = mIgnoreViewSet.iterator();
+            while (iterator.hasNext()) {
+                view = iterator.next();
+                if (view != null) {
+                    Rect rect = new Rect(view.getLeft(), view.getTop(), view.getRight(), view.getBottom());
+                    handle = rect.contains((int) (x + getScrollX()), (int) (y + getScrollY()));
+                    if (handle == true) {
+                        break;
+                    }
+                }
+            }
+        }
+        return handle;
     }
 
     //TODO 增加必要的事件监听器
