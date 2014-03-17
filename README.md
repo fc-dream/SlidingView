@@ -3,7 +3,7 @@ SlidingView是一个从[SlidingLayer](https://github.com/6wunderkinder/android-s
 
 SlidingView为大家提供了一个能够高度自由滑动的UI组件。你可以为SlidingView添加任意多个方向不同的位置，以及滑动范围。之后你就可以拖拽她到达设定的位置，也可以调用`switchPosition`滑动她到设定的位置。通过她，你可以轻松的实现[SlidingLayer](https://github.com/6wunderkinder/android-sliding-layer-lib "SlidingLayer")提供的功能。更可以开发更加复杂的UI。
 ## 如何导入项目 ##
-SlidingView使用了gradle作为构建工具。因此，如果你和我一样在使用AndroidStudio那么按照下面的步骤就可以轻松的导入我的项目。如果你依旧在使用 Eclipse，你可以google一下找到结局方案。  
+SlidingView使用了gradle作为构建工具。因此，如果你和我一样在使用AndroidStudio那么按照下面的步骤就可以轻松的导入我的项目。如果你依旧在使用 Eclipse，你可以google一下找到解决方案。  
 
 
 1. 将sliding_view_library整个目录复制到你的项目下，使项目结构成为`YourProject/YourModel` `YourProject/sliding_view_library`。
