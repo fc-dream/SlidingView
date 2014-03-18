@@ -581,7 +581,10 @@ public class SlidingView extends FrameLayout {
                 isSwitching = false;
                 if(mPositionManager.isAtPosition(getScrollX(),getScrollY()))
                 {
-                    mSwitchedListener.onSwitched(mPositionManager.currentPosition);
+                    if(mSwitchedListener!=null)
+                    {
+                        mSwitchedListener.onSwitched(mPositionManager.currentPosition);
+                    }
                 }
             }
         }
