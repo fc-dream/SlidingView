@@ -337,7 +337,6 @@ public class SlidingView extends FrameLayout {
              *如果正在切换位置（也就是调用了switchPosition(Integer)），
              *那么停止切换，停留在现在位置。
             */
-            //TODO 没有对当前的位置是否符合要求进行判断，有BUG
             case MotionEvent.ACTION_DOWN:
                 if (isSwitching) {
                     stopSwitch();
@@ -351,7 +350,7 @@ public class SlidingView extends FrameLayout {
             case MotionEvent.ACTION_CANCEL:
                 if (!isDragging && !mPositionManager.isAtPosition(getScrollX(), getScrollY())) {
                     int position = mPositionManager.guessPosition(getScrollX(), getScrollY());
-                    switchPosition(position, true, false, 0);
+                    switchPosition(position, true, true, 0);
                 }
                 break;
         }
@@ -364,7 +363,6 @@ public class SlidingView extends FrameLayout {
         }
     }
 
-    //TODO 当第二根手指不满足allDragFrmHere的条件，而第一根手指又离开的情况下。会出现一个bug
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         //如果不允许滑动或者不允许拖拽，那么久乘早结束吧。
@@ -436,7 +434,7 @@ public class SlidingView extends FrameLayout {
                 } else if (!mPositionManager.isAtPosition(getScrollX(), getScrollY())) {
                     //如果没有滑动，但也不再任意一个目标位置，那么就找一个最近的位置作为要到达的目标位置
                     int poition = mPositionManager.guessPosition(getScrollX(), getScrollY());
-                    switchPosition(poition, true, false, 0);
+                    switchPosition(poition, true, true, 0);
                 }
                 endDrag();
                 return true;
@@ -545,26 +543,11 @@ public class SlidingView extends FrameLayout {
         return FloatMath.sin(f);
     }
 
-    //TODO 当SlidingView中的子view占据的大小大于所能显示的范围时，会出现bug
-
     /**
      * 判断是否可以从该处移动
-     * <p>只有当触摸事件对应的位置在视图上时才能进行拖拽</p>
      */
     private boolean allowSlidingFromHere(final float initialX, final float initialY) {
         boolean allow = true;
-        if (initialX > (getRight() - getScrollX())) {
-            allow = false;
-        }
-        if (initialX < (getLeft() - getScrollX())) {
-            allow = false;
-        }
-        if (initialY < (getTop() - getScrollY())) {
-            allow = false;
-        }
-        if (initialY > (getBottom() - getScrollY())) {
-            allow = false;
-        }
         if(whetherInIgnoreView(initialX,initialY))
         {
             allow=false;
