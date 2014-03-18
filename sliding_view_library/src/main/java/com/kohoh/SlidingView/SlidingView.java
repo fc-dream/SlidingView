@@ -62,6 +62,7 @@ public class SlidingView extends FrameLayout {
     private int rightSlideBound;
     private int bottomSlideBound;
     private Set<View> mIgnoreViewSet;
+    private onSwitchedListener mSwitchedListener;
 
     /**
      * 构建一个SlidingView。<br>
@@ -578,6 +579,10 @@ public class SlidingView extends FrameLayout {
         } else {
             if (isSwitching) {
                 isSwitching = false;
+                if(mPositionManager.isAtPosition(getScrollX(),getScrollY()))
+                {
+                    mSwitchedListener.onSwitched(mPositionManager.currentPosition);
+                }
             }
         }
     }
@@ -782,7 +787,9 @@ public class SlidingView extends FrameLayout {
         return handle;
     }
 
-    //TODO 增加必要的事件监听器
+    public void setSwitchedListener(onSwitchedListener Listener) {
+        this.mSwitchedListener = Listener;
+    }
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
@@ -1082,6 +1089,17 @@ public class SlidingView extends FrameLayout {
             return nextPosition;
         }
 
+    }
+
+    /**
+     * 切换完成监听器，监听切换完成事件
+     */
+    public interface onSwitchedListener{
+        /**
+         * 当切换完成时会触发该方法
+         * @param currentPosition 当前位置
+         */
+        public void onSwitched(int currentPosition);
     }
 
 }
