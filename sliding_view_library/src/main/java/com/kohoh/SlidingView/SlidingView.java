@@ -100,7 +100,8 @@ public class SlidingView extends FrameLayout {
     public SlidingView(Context context, int initialX, int initialY) {
         this(context, null);
         if (mPositionManager.removePosition(mPositionManager.POSITION_INITIAL)) {
-            mPositionManager.addPosition(mPositionManager.POSITION_INITIAL, new Coordinate(initialX, initialY));
+            mPositionManager.addPosition(mPositionManager.POSITION_INITIAL,
+                    new Coordinate(initialX, initialY));
         }
     }
 
@@ -373,6 +374,7 @@ public class SlidingView extends FrameLayout {
 
         //做好好拖拽前的准备工作
         prepareToDrag(event);
+        mVelocityTracker.addMovement(event);
 
         if (DEBUG) {
             GestureUtil.printEvent(event, "onTouchEvent");
@@ -393,7 +395,7 @@ public class SlidingView extends FrameLayout {
                 //第一次拖拽的距离一定要大于mTouchSlop这个阈值，如果大于这个阈值那么久开始拖拽
                 if (!isDragging) {
                     if ((Math.abs(deltaX) >= mTouchSlop || Math.abs(deltaY) >= mTouchSlop)
-                            &&allowSlidingFromHere(mLastX,mLastY)) {
+                            && allowSlidingFromHere(mLastX, mLastY)) {
                         isDragging = true;
                     }
                 }
@@ -419,18 +421,17 @@ public class SlidingView extends FrameLayout {
             //最后一个手指离开时，SlidingView也许没有到达任意一个目标位置，因此需要对此处理。
             case MotionEvent.ACTION_UP:
                 if (isDragging) {
-                    final VelocityTracker velocityTracker = mVelocityTracker;
-                    velocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
-                    final int initialVelocityX = (int) VelocityTrackerCompat.getXVelocity(velocityTracker,
-                            0);
-                    final int initialVelocityY = (int) VelocityTrackerCompat.getYVelocity(velocityTracker,
-                            0);
+                    mVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
+                    final int initialVelocityX = (int) VelocityTrackerCompat.getXVelocity(
+                            mVelocityTracker, mActivePointerId);
+                    final int initialVelocityY = (int) VelocityTrackerCompat.getYVelocity(
+                            mVelocityTracker, mActivePointerId);
                     final int scrollX = getScrollX();
                     final int scrollY = getScrollY();
 
                     //根据滑动的速率、初始位置、现在的位置，决定要到达的目标位置
-                    int position = mPositionManager.determineTargetPosition(initialVelocityX, initialVelocityY
-                            , mInitialScrollX, mInitialScrollY, scrollX, scrollY);
+                    int position = mPositionManager.determineTargetPosition(initialVelocityX,
+                            initialVelocityY, mInitialScrollX, mInitialScrollY, scrollX, scrollY);
                     switchPosition(position, true, true, initialVelocityX, initialVelocityY);
                 } else if (!mPositionManager.isAtPosition(getScrollX(), getScrollY())) {
                     //如果没有滑动，但也不再任意一个目标位置，那么就找一个最近的位置作为要到达的目标位置
@@ -469,7 +470,7 @@ public class SlidingView extends FrameLayout {
      */
     private void prepareToDrag(MotionEvent event) {
         if (MotionEventCompat.findPointerIndex(event, mActivePointerId) == INVALID_POINTER) {
-            int activePointerIndex=MotionEventCompat.getActionIndex(event);
+            int activePointerIndex = MotionEventCompat.getActionIndex(event);
             float currentX = MotionEventCompat.getX(event, activePointerIndex);
             float currentY = MotionEventCompat.getY(event, activePointerIndex);
             if (mVelocityTracker != null) {
@@ -477,7 +478,6 @@ public class SlidingView extends FrameLayout {
             } else {
                 mVelocityTracker = VelocityTracker.obtain();
             }
-            mVelocityTracker.addMovement(event);
             mActivePointerId = MotionEventCompat.getPointerId(event, activePointerIndex);
             mInitialScrollX = getScrollX();
             mInitialScrollY = getScrollY();
@@ -486,12 +486,12 @@ public class SlidingView extends FrameLayout {
         }
     }
 
-        /**
-         * Like {@link android.view.View#scrollBy}, but scroll smoothly instead of immediately.
-         *
-         * @param x the number of pixels to scroll by on the X axis
-         * @param y the number of pixels to scroll by on the Y axis
-         */
+    /**
+     * Like {@link android.view.View#scrollBy}, but scroll smoothly instead of immediately.
+     *
+     * @param x the number of pixels to scroll by on the X axis
+     * @param y the number of pixels to scroll by on the Y axis
+     */
 
     void smoothScrollTo(int x, int y) {
         smoothScrollTo(x, y, 0);
@@ -549,9 +549,8 @@ public class SlidingView extends FrameLayout {
      */
     private boolean allowSlidingFromHere(final float initialX, final float initialY) {
         boolean allow = true;
-        if(whetherInIgnoreView(initialX,initialY))
-        {
-            allow=false;
+        if (whetherInIgnoreView(initialX, initialY)) {
+            allow = false;
         }
         return allow;
     }
@@ -579,10 +578,8 @@ public class SlidingView extends FrameLayout {
         } else {
             if (isSwitching) {
                 isSwitching = false;
-                if(mPositionManager.isAtPosition(getScrollX(),getScrollY()))
-                {
-                    if(mSwitchedListener!=null)
-                    {
+                if (mPositionManager.isAtPosition(getScrollX(), getScrollY())) {
+                    if (mSwitchedListener != null) {
                         mSwitchedListener.onSwitched(mPositionManager.currentPosition);
                     }
                 }
@@ -633,8 +630,8 @@ public class SlidingView extends FrameLayout {
      * @param forceSwitch    是否强化切换位置
      * @param velocity       切换的速率
      */
-    public void switchPosition(final int targetPosition, final boolean smoothAnim, final boolean forceSwitch,
-                               final int velocity) {
+    public void switchPosition(final int targetPosition, final boolean smoothAnim,
+                               final boolean forceSwitch, final int velocity) {
 
         if (!mEnableSlide) {
             return;
@@ -669,8 +666,8 @@ public class SlidingView extends FrameLayout {
      * @param velocityX      x轴的切换速率
      * @param velocityY      y轴的切换速率
      */
-    public void switchPosition(final int targetPosition, final boolean smoothAnim, final boolean forceSwitch,
-                               final int velocityX, final int velocityY) {
+    public void switchPosition(final int targetPosition, final boolean smoothAnim,
+                               final boolean forceSwitch, final int velocityX, final int velocityY) {
         int velocity = (int) Math.sqrt((velocityX * velocityX) + (velocityY * velocityY));
         switchPosition(targetPosition, smoothAnim, forceSwitch, velocity);
     }
@@ -716,7 +713,7 @@ public class SlidingView extends FrameLayout {
             mIgnoreViewSet = new HashSet<View>();
         }
 
-        if (view != null && view.getVisibility()==VISIBLE) {
+        if (view != null && view.getVisibility() == VISIBLE) {
             handle = mIgnoreViewSet.add(view);
         }
 
@@ -1097,9 +1094,10 @@ public class SlidingView extends FrameLayout {
     /**
      * 切换完成监听器，监听切换完成事件
      */
-    public interface onSwitchedListener{
+    public interface onSwitchedListener {
         /**
          * 当切换完成时会触发该方法
+         *
          * @param currentPosition 当前位置
          */
         public void onSwitched(int currentPosition);
