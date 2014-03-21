@@ -439,6 +439,10 @@ public class SlidingView extends FrameLayout {
                     //根据滑动的速率、初始位置、现在的位置，决定要到达的目标位置
                     int position = mPositionManager.determineTargetPosition(initialVelocityX,
                             initialVelocityY, mInitialScrollX, mInitialScrollY, scrollX, scrollY);
+                    if(DEBUG)
+                    {
+                        Log.v(TAG,"determineTargetPosition="+position);
+                    }
                     switchPosition(position, true, true, initialVelocityX, initialVelocityY);
                 } else if (!mPositionManager.isAtPosition(getScrollX(), getScrollY())) {
                     //如果没有滑动，但也不再任意一个目标位置，那么就找一个最近的位置作为要到达的目标位置
@@ -823,7 +827,16 @@ public class SlidingView extends FrameLayout {
     /**
      * 封装位置的坐标信息
      */
-    class Coordinate {
+    static class Coordinate {
+        /**
+         * x轴的坐标
+         */
+        public int x;
+        /**
+         * y轴的坐标
+         */
+        public int y;
+
         /**
          * 构建一个坐标，并设置他的值。
          *
@@ -836,13 +849,74 @@ public class SlidingView extends FrameLayout {
         }
 
         /**
-         * x轴的坐标
+         * 计算两坐标之间的距离
+         *
+         * @param c1 坐标1
+         * @param c2 坐标2
+         * @return 坐标c1与坐标c2间的距离
          */
-        public int x;
+        static public float computeDistance(Coordinate c1, Coordinate c2) {
+            return (float) Math.sqrt(Math.pow((c1.x - c2.x), 2) + Math.pow((c1.y - c2.y), 2));
+        }
+    }
+
+    /**
+     * 向量
+     */
+    static class Vector
+    {
         /**
-         * y轴的坐标
+         * 向量在x轴上的坐标
          */
-        public int y;
+        float x;
+        /**
+         * 向量在y轴上的坐标
+         */
+        float y;
+        /**
+         * 向量的模
+         */
+        float length;
+
+        /**
+         *
+         * @param x 向量在x轴上的坐标
+         * @param y 向量在y轴上的坐标
+         */
+        public Vector(float x,float y)
+        {
+            this.x=x;
+            this.y=y;
+            //计算向量的模
+            this.length= (float) Math.sqrt(Math.pow(x,2)+Math.pow(y,2));
+        }
+
+        /**
+         * 已知两点求向量
+         * @param start 起点
+         * @param end 终点
+         */
+        public Vector(Coordinate start,Coordinate end)
+        {
+            this(end.x-start.x,end.y-start.y);
+        }
+
+        /**
+         * 求两向量间的夹角的余玄
+         * @param v1 向量1
+         * @param v2 向量2
+         * @return 夹角余玄
+         */
+        static public float computeCos(Vector v1,Vector v2)
+        {
+            float cos1=v1.x/v1.length;
+            float sin1=v1.y/v1.length;
+            float cos2=v2.x/v2.length;
+            float sin2=v2.y/v2.length;
+
+            float cos=cos1*cos2+sin1*sin2;
+            return cos;
+        }
     }
 
     /**
@@ -1014,47 +1088,76 @@ public class SlidingView extends FrameLayout {
         //TODO 算法似乎还不够好
 
         /**
-         * 根据当前的位置，猜测你想要到达的位置
-         * <p>此处的算法是根据当前位置和滑动的起始位置，计算出滑动的方向。再计算滑动方向和从滑动的起
-         * 始位置到各个目标位置方向之间的夹角，取夹角最小的位置作为想要到达的位置。如果夹角相同取到
-         * 达距离最短的位置</p>
+         * 猜测目标位置
+         * @see #guessPosition(Coordinate,Coordinate);
          *
-         * @param initialX 滑动的起始位置的x轴坐标
-         * @param initialY 滑动的起始位置的y轴坐标
-         * @param currentX 当前位置的x轴坐标
-         * @param currentY 当前位置的y轴坐标
+         * @param endX 滑动的起始位置的x轴坐标
+         * @param startY 滑动的起始位置的y轴坐标
+         * @param endX 当前位置的x轴坐标
+         * @param endY 当前位置的y轴坐标
          * @return 猜测想要到达的位置对应的Id
          */
-        public int guessPosition(final int initialX, final int initialY
-                , final int currentX, final int currentY) {
-            Coordinate pi = new Coordinate(initialX, initialY);
-            Coordinate pc = new Coordinate(currentX, currentY);
-            float dic = computeDistance(pi, pc);
-            float maxCos = (float) Integer.MIN_VALUE;
-            float minDis = (float) Integer.MAX_VALUE;
+        public int guessPosition(final int startX, final int startY
+                , final int endX, final int endY) {
+           return guessPosition(new Coordinate(startX,startY),new Coordinate(endX,endY));
+        }
 
-            Integer desirePositionId = POSITION_INITIAL;
-
-            Iterator iterator = coordinateMap.entrySet().iterator();
-            while (iterator.hasNext()) {
-                Map.Entry<Integer, Coordinate> entry = (Map.Entry<Integer, Coordinate>) iterator.next();
-                if (currentPosition == entry.getKey()) {
+        /**
+         * 猜测目标位置
+         * <p>根据移动向量，猜测要到达的位置。移动向量由start和end得到。计算从start到各个位置的向量
+         * 与移动向量的夹角。取满足一下条件的位置作为所猜测的位置
+         * <ol>
+         *     <li>夹角在0度到45度之间</li>
+         *     <li>夹角最小</li>
+         *     <li>从end到猜测位置的距离最短</li>
+         *     <li>不为当前位置</li>
+         * </ol>
+         * 如果不满足以上条件，则返回当前位置。</p>
+         * @param start 向量的起点
+         * @param end 向量的终点
+         * @return
+         */
+        public int guessPosition(Coordinate start,Coordinate end)
+        {
+            //精度取5度
+            final float precision= (float) Math.abs(Math.cos(Math.PI / 2) - Math.cos(Math.PI / 18 * 19));
+            int guess=currentPosition;
+            Vector vector1=new Vector(start,end);
+            float maxCos=Float.MIN_VALUE;
+            float minDis=Float.MAX_VALUE;
+            Iterator<Map.Entry<Integer,Coordinate>> iterator=coordinateMap.entrySet().iterator();
+            while(iterator.hasNext())
+            {
+                Map.Entry<Integer,Coordinate> entry=iterator.next();
+                Coordinate coordinate=entry.getValue();
+                Vector vector2=new Vector(start,coordinate);
+                float cos=Vector.computeCos(vector1,vector2);
+                //判断是否是当前位置
+                if(entry.getKey()==currentPosition)
+                {
                     continue;
                 }
-                Coordinate pd = entry.getValue();
-                float did = computeDistance(pi, pd);
-                float dcd = computeDistance(pc, pd);
-                float cosa = ((dic * dic) + (did * did) - (dcd * dcd)) / (2 * dic * did);
-                if (cosa > maxCos) {
-                    maxCos = cosa;
-                    desirePositionId = entry.getKey();
+                //判断是否在0度到45度之间
+                if(!(Math.cos(Math.PI/4)<=cos&&cos<=Math.cos(0)))
+                {
+                    continue;
                 }
-                if (cosa == maxCos && dcd < minDis) {
-                    minDis = dcd;
-                    desirePositionId = entry.getKey();
+                //判断cos是否大于maxCos
+                if((cos-maxCos)>precision)
+                {
+                    maxCos=cos;
+                    minDis=Coordinate.computeDistance(end,coordinate);
+                    guess=entry.getKey();
+                }
+                //判断cos是否等于maxCos且距离更小
+                if(Math.abs(cos-maxCos)<precision&&Coordinate.computeDistance(end,coordinate)<minDis)
+                {
+                    maxCos=cos;
+                    minDis=Coordinate.computeDistance(end,coordinate);
+                    guess=entry.getKey();
                 }
             }
-            return desirePositionId;
+            return guess;
         }
 
         /**
@@ -1078,6 +1181,10 @@ public class SlidingView extends FrameLayout {
 
             int nextPosition = currentPosition;
             int desirePositionId = guessPosition(initialX, initialY, currentX, currentY);
+            if(DEBUG)
+            {
+                Log.v(TAG,"geussPosition="+desirePositionId);
+            }
             Coordinate desireP = coordinateMap.get(desirePositionId);
             Coordinate initialP = new Coordinate(initialX, initialY);
             Coordinate currentP = new Coordinate(currentX, currentY);
