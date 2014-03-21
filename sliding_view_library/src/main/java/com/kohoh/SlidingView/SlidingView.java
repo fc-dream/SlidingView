@@ -1085,8 +1085,6 @@ public class SlidingView extends FrameLayout {
             return targetPosition;
         }
 
-        //TODO 算法似乎还不够好
-
         /**
          * 猜测目标位置
          * @see #guessPosition(Coordinate,Coordinate);
