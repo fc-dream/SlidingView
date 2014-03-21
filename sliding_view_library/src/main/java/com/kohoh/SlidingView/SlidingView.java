@@ -28,6 +28,7 @@ import java.util.Set;
 
 public class SlidingView extends FrameLayout {
     private static final boolean DEBUG = false;
+    private static final String TAG="SlidingView";
     private static final int MAX_SCROLLING_DURATION = 600; // in ms
     private static final int MIN_DISTANCE_FOR_FLING = 25; // in dip
 
@@ -63,6 +64,7 @@ public class SlidingView extends FrameLayout {
     private int bottomSlideBound;
     private Set<View> mIgnoreViewSet;
     private onSwitchedListener mSwitchedListener;
+    public static final int POSITION_INITIAL = PositionManager.POSITION_INITIAL;
 
     /**
      * 构建一个SlidingView。<br>
@@ -79,7 +81,7 @@ public class SlidingView extends FrameLayout {
      * @param context 想关联的Context
      */
     public SlidingView(Context context) {
-        this(context, null);
+        this(context, 0, 0);
     }
 
     /**
@@ -98,11 +100,16 @@ public class SlidingView extends FrameLayout {
      * @param initialY 初始位置的y轴坐标
      */
     public SlidingView(Context context, int initialX, int initialY) {
-        this(context, null);
-        if (mPositionManager.removePosition(mPositionManager.POSITION_INITIAL)) {
-            mPositionManager.addPosition(mPositionManager.POSITION_INITIAL,
-                    new Coordinate(initialX, initialY));
-        }
+        super(context);
+        init();
+        mPositionManager = new PositionManager(new Coordinate(initialX, initialY));
+        leftSlideBound = initialX;
+        rightSlideBound = initialX;
+        topSlideBound = initialY;
+        bottomSlideBound = initialY;
+        mEnableDrag = true;
+        mEnableSlide = true;
+        mEnableInterceptAllGesture = false;
     }
 
     /**
@@ -146,6 +153,7 @@ public class SlidingView extends FrameLayout {
         final TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.SlidingView);
         int initialX = (int) ta.getDimension(R.styleable.SlidingView_initialX, 0);
         int initialY = (int) ta.getDimension(R.styleable.SlidingView_initialY, 0);
+        mPositionManager = new PositionManager(new Coordinate(initialX, initialY));
         leftSlideBound = (int) ta.getDimension(R.styleable.SlidingView_leftSlideBound, initialX);
         rightSlideBound = (int) ta.getDimension(R.styleable.SlidingView_rightSlideBound, initialX);
         topSlideBound = (int) ta.getDimension(R.styleable.SlidingView_topSlideBound, initialY);
@@ -153,7 +161,6 @@ public class SlidingView extends FrameLayout {
         mEnableDrag = ta.getBoolean(R.styleable.SlidingView_dragEnable, true);
         mEnableSlide = ta.getBoolean(R.styleable.SlidingView_slideEnable, true);
         mEnableInterceptAllGesture = ta.getBoolean(R.styleable.SlidingView_interceptAllGestureEnable, false);
-        mPositionManager = new PositionManager(new Coordinate(initialX, initialY));
         ta.recycle();
 
         init();
@@ -907,15 +914,15 @@ public class SlidingView extends FrameLayout {
          * @return true 成功移除位置
          */
         public boolean removePosition(Integer positionId) {
-
-            boolean result = true;
+            if (positionId == POSITION_INITIAL) {
+                return false;
+            }
             if (coordinateMap.remove(positionId) == null) {
-                result = false;
+                return false;
             } else {
                 setBound();
+                return true;
             }
-
-            return result;
         }
 
         /**
