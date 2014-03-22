@@ -293,7 +293,7 @@ public class SlidingView extends FrameLayout {
     }
 
     /**
-     * 设置SlidingView的左侧滑动范围
+     * 获取SlidingView的左侧滑动范围
      *
      * @return 左侧滑动范围
      * @see #setLeftSlideBound(int)
@@ -317,7 +317,7 @@ public class SlidingView extends FrameLayout {
     }
 
     /**
-     * 设置SlidingView的右侧滑动范围
+     * 获取SlidingView的右侧滑动范围
      *
      * @return 右侧滑动范围
      * @see #setRightSlideBound(int)
@@ -341,7 +341,7 @@ public class SlidingView extends FrameLayout {
     }
 
     /**
-     * 设置SlidingView的上侧滑动范围
+     * 获取SlidingView的上侧滑动范围
      *
      * @return 顶侧滑动范围
      * @see #setTopSlideBound(int)
