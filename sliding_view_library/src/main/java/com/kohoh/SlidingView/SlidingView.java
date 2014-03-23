@@ -1,6 +1,6 @@
 //TODO 更改现有的坐标系
 //TODO slidebound似乎没有必要设置这么多set方法，一个就够了
-//TODO setDrwaingCache似乎需要重构，改成setSlidingCache,并且该View不需要cache。zhe点还可以对SLiingLayer进行修改，也许SlidingView也需要修改。
+//TODO 在开启硬件加速的情况下不似乎不需要开启绘制缓存
 package com.kohoh.SlidingView;
 
 import android.content.Context;
