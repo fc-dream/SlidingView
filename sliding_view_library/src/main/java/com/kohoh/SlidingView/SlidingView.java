@@ -281,7 +281,7 @@ public class SlidingView extends FrameLayout {
      * @return SlidingView的初始位置坐标，如果为null的话，则没有这是初始位置坐标。
      */
     public Coordinate getInitialPosition() {
-        return mPositionHelper.getCoordinate(mPositionSet.POSITION_INITIAL);
+        return this.mPositionSet.getPosition(mPositionSet.POSITION_INITIAL);
     }
 
     /**
@@ -483,11 +483,8 @@ public class SlidingView extends FrameLayout {
                     final int scrollY = getScrollY();
 
                     //根据滑动的速率、初始位置、现在的位置，决定要到达的目标位置
-                    int position = mPositionHelper.determineTargetPosition(initialVelocityX,
+                    int position = mPositionHelper.guessPosition(initialVelocityX,
                             initialVelocityY, mInitialScrollX, mInitialScrollY, scrollX, scrollY);
-                    if (DEBUG) {
-                        Log.v(TAG, "determineTargetPosition=" + position);
-                    }
                     switchPosition(position, true, true, initialVelocityX, initialVelocityY);
                 } else if (!mPositionHelper.isAtPosition(getScrollX(), getScrollY())) {
                     //如果没有滑动，但也不再任意一个目标位置，那么就找一个最近的位置作为要到达的目标位置
@@ -693,7 +690,7 @@ public class SlidingView extends FrameLayout {
             return;
         }
 
-        Coordinate targetCoordinate = mPositionHelper.getCoordinate(targetPosition);
+        Coordinate targetCoordinate = this.mPositionSet.getPosition(targetPosition);
         Integer currentPosition = mPositionSet.getCurrentPosition();
 
         if (targetCoordinate == null) {
@@ -959,9 +956,9 @@ public class SlidingView extends FrameLayout {
     /**
      * 通过提供给一系列的方法来协助管理位置信息。
      * <p>此外PositionManager还提供了一些列的方法，帮助你到达
-     * 到达目标位置。你可以通过{@link #determineTargetPosition(float, float, int, int, int, int)}
+     * 到达目标位置。你可以通过{@link #guessPosition(float, float, int, int, int, int)}
      * {@link #guessPosition(int, int)} {@link #guessPosition(int, int, int, int)}得到你的目标位置。
-     * 通过{@link #getCoordinate(int)}获取对应位置的坐标。</p>
+     * </p>
      */
     class PositionHelper {
         private PositionSet positionSet;
@@ -978,25 +975,29 @@ public class SlidingView extends FrameLayout {
          * @return true 处于所有位置之一
          */
         public boolean isAtPosition(int currentX, int currentY) {
+            return isAtPosition(new Coordinate(currentX,currentY));
+        }
+
+        /**
+         * 判断当前位置是否处于所有位置之一
+         * @param coordinate 当前的坐标
+         * @return true 处于所有位置之一
+         */
+        public boolean isAtPosition(final Coordinate coordinate) {
+            if(coordinate==null)
+            {
+                throw new IllegalArgumentException("currentCoordinate is invaild");
+            }
+
             Iterator iterator = positionSet.coordinateMap.entrySet().iterator();
             while (iterator.hasNext()) {
                 Map.Entry<Integer, Coordinate> entry = (Map.Entry<Integer, Coordinate>) iterator.next();
                 Coordinate targetCoordinate = entry.getValue();
-                if (targetCoordinate.x == currentX && targetCoordinate.y == currentY) {
+                if (targetCoordinate.x == coordinate.x && targetCoordinate.y == coordinate.y) {
                     return true;
                 }
             }
             return false;
-        }
-
-        /**
-         * 获取对应Id的位置坐标
-         *
-         * @param positionId 位置对应的Id
-         * @return 位置对应的坐标
-         */
-        public Coordinate getCoordinate(int positionId) {
-            return positionSet.coordinateMap.get(positionId);
         }
 
         /**
@@ -1008,14 +1009,28 @@ public class SlidingView extends FrameLayout {
          * @return 猜测想要到达的位置对应的Id
          */
         public int guessPosition(int currentX, int currentY) {
-            Coordinate currentCorrdinate = new Coordinate(currentX, currentY);
+            return this.guessPosition(new Coordinate(currentX,currentY));
+        }
+
+        /**
+         * 根据当前的位置，猜测你想要到达的位置
+         * @see #guessPosition(int, int)
+         * @param coordinate 当前的坐标
+         * @return 猜测想要到达的位置对应的Id
+         */
+        public int guessPosition(final Coordinate coordinate)
+        {
+            if(coordinate==null)
+            {
+                throw new IllegalArgumentException("currentCoordinate is invalid");
+            }
             float min = Float.MAX_VALUE;
-            Iterator iterator = positionSet.coordinateMap.entrySet().iterator();
+            Iterator iterator = this.positionSet.getIterator();
             int targetPosition = POSITION_INITIAL;
             while (iterator.hasNext()) {
                 Map.Entry<Integer, Coordinate> entry = (Map.Entry<Integer, Coordinate>) iterator.next();
                 Coordinate targetCoordinate = entry.getValue();
-                float distance = Coordinate.computeDistance(targetCoordinate, currentCorrdinate);
+                float distance = Coordinate.computeDistance(targetCoordinate,coordinate);
                 if (distance < min) {
                     min = distance;
                     targetPosition = entry.getKey();
@@ -1055,14 +1070,18 @@ public class SlidingView extends FrameLayout {
          * @param end   向量的终点
          * @return
          */
-        public int guessPosition(Coordinate start, Coordinate end) {
+        public int guessPosition(final Coordinate start,final Coordinate end) {
+            if(start==null||end==null)
+            {
+                throw new IllegalArgumentException("coordinate is invalid");
+            }
             //精度取5度
             final float precision = (float) Math.abs(Math.cos(Math.PI / 2) - Math.cos(Math.PI / 18 * 19));
             int guess = positionSet.getCurrentPosition();
             Vector vector1 = new Vector(start, end);
             float maxCos = Float.MIN_VALUE;
             float minDis = Float.MAX_VALUE;
-            Iterator<Map.Entry<Integer, Coordinate>> iterator = positionSet.coordinateMap.entrySet().iterator();
+            Iterator<Map.Entry<Integer, Coordinate>> iterator = this.positionSet.getIterator();
             while (iterator.hasNext()) {
                 Map.Entry<Integer, Coordinate> entry = iterator.next();
                 Coordinate coordinate = entry.getValue();
@@ -1101,34 +1120,33 @@ public class SlidingView extends FrameLayout {
          *
          * @param velocityX x轴的滑动速度
          * @param velocityY y轴的滑动速度
-         * @param initialX  滑动起始位置的x轴坐标
-         * @param initialY  滑动起始位置的y轴坐标
-         * @param currentX  当前位置的x轴坐标
-         * @param currentY  当前位置的y轴坐标
+         * @param startX  滑动起始位置的x轴坐标
+         * @param startY  滑动起始位置的y轴坐标
+         * @param endX  当前位置的x轴坐标
+         * @param endY  当前位置的y轴坐标
          * @return 决定要到达的目标位置所对应的Id
          */
-        public int determineTargetPosition(float velocityX, float velocityY
-                , int initialX, int initialY
-                , int currentX, int currentY) {
+        public int guessPosition(float velocityX, float velocityY
+                , int startX, int startY
+                , int endX, int endY) {
 
             int nextPosition = positionSet.getCurrentPosition();
-            int desirePositionId = guessPosition(initialX, initialY, currentX, currentY);
+            int guess = guessPosition(startX, startY, endX, endY);
+            Coordinate desireP = this.positionSet.getPosition(guess);
             if (DEBUG) {
-                Log.v(TAG, "geussPosition=" + desirePositionId);
+                Log.v(TAG, "geussPosition=" + guess);
             }
-            Coordinate desireP = positionSet.coordinateMap.get(desirePositionId);
-            Coordinate initialP = new Coordinate(initialX, initialY);
-            Coordinate currentP = new Coordinate(currentX, currentY);
-
-            float currentDistance = Coordinate.computeDistance(initialP, currentP);
-            float totalDistance = Coordinate.computeDistance(initialP, desireP);
+            Coordinate start = new Coordinate(startX, startY);
+            Coordinate end = new Coordinate(endX, endY);
+            float currentDistance = Coordinate.computeDistance(start, end);
+            float totalDistance = Coordinate.computeDistance(start, desireP);
             float velocity = (float) Math.sqrt((velocityX * velocityX) + (velocityY * velocityY));
 
             if (currentDistance > mFlingDistance && velocity > mMinimumVelocity && velocity != 0) {
-                nextPosition = desirePositionId;
+                nextPosition = guess;
             } else {
                 if (Math.round(currentDistance / totalDistance) >= 1) {
-                    nextPosition = desirePositionId;
+                    nextPosition = guess;
                 }
             }
             return nextPosition;
@@ -1166,7 +1184,7 @@ public class SlidingView extends FrameLayout {
          * 初始位置对应的Id
          */
         public static final int POSITION_INITIAL = -1;
-        Map<Integer, Coordinate> coordinateMap;
+        private Map<Integer, Coordinate> coordinateMap;
         private int leftBound = Integer.MIN_VALUE;
         private int topBound = Integer.MIN_VALUE;
         private int rightBound = Integer.MAX_VALUE;
@@ -1231,6 +1249,24 @@ public class SlidingView extends FrameLayout {
         }
 
         /**
+         * 获取对应Id的位置坐标
+         *
+         * @param positionId 位置对应的Id
+         * @return 位置对应的坐标
+         */
+        public Coordinate getPosition(int positionId) {
+            return coordinateMap.get(positionId);
+        }
+
+        /**
+         * 获取Iterator
+         */
+        Iterator<Map.Entry<Integer,Coordinate>> getIterator()
+        {
+            return this.coordinateMap.entrySet().iterator();
+        }
+
+        /**
          * 根据所有位置的坐标，设置所能到达的上下左右的最大范围
          */
         private void setBound() {
@@ -1244,8 +1280,8 @@ public class SlidingView extends FrameLayout {
                 Map.Entry<Integer, Coordinate> entry = (Map.Entry<Integer, Coordinate>) iterator.next();
                 Coordinate coordinate = entry.getValue();
 
-                leftBound = (int) Math.max(leftBound, coordinate.x);
-                rightBound = (int) Math.min(rightBound, coordinate.x);
+                leftBound = (int) Math.min(leftBound, coordinate.x);
+                rightBound = (int) Math.max(rightBound, coordinate.x);
                 topBound = (int) Math.max(topBound, coordinate.y);
                 bottomBound = (int) Math.min(bottomBound, coordinate.y);
             }
