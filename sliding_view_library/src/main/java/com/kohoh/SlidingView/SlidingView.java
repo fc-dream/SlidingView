@@ -23,17 +23,15 @@ import android.widget.Scroller;
 
 import com.kohoh.util.GestureUtil;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 public class SlidingView extends FrameLayout {
     private static final boolean DEBUG = false;
     private static final String TAG = "SlidingView";
     private static final int MAX_SCROLLING_DURATION = 600; // in ms
-    private static final int MIN_DISTANCE_FOR_FLING = 25; // in dip
+
 
     private static final Interpolator sMenuInterpolator = new Interpolator() {
         @Override
@@ -43,9 +41,9 @@ public class SlidingView extends FrameLayout {
         }
     };
     private int mTouchSlop;
-    private int mMinimumVelocity;
+
     private int mMaximumVelocity;
-    private int mFlingDistance;
+
     private PositionSet mPositionSet;
     private PositionHelper mPositionHelper;
     private Scroller mScroller;
@@ -107,7 +105,7 @@ public class SlidingView extends FrameLayout {
         super(context);
         init();
         mPositionSet = new PositionSet(new Coordinate(initialX, initialY));
-        mPositionHelper = new PositionHelper(mPositionSet);
+        mPositionHelper = new PositionHelper(mPositionSet,context);
         leftSlideBound = initialX;
         rightSlideBound = initialX;
         topSlideBound = initialY;
@@ -159,7 +157,7 @@ public class SlidingView extends FrameLayout {
         int initialX = (int) ta.getDimension(R.styleable.SlidingView_initialX, 0);
         int initialY = (int) ta.getDimension(R.styleable.SlidingView_initialY, 0);
         mPositionSet = new PositionSet(new Coordinate(initialX, initialY));
-        mPositionHelper = new PositionHelper(mPositionSet);
+        mPositionHelper = new PositionHelper(mPositionSet,context);
         leftSlideBound = (int) ta.getDimension(R.styleable.SlidingView_leftSlideBound, initialX);
         rightSlideBound = (int) ta.getDimension(R.styleable.SlidingView_rightSlideBound, initialX);
         topSlideBound = (int) ta.getDimension(R.styleable.SlidingView_topSlideBound, initialY);
@@ -183,10 +181,8 @@ public class SlidingView extends FrameLayout {
         mScroller = new Scroller(context, sMenuInterpolator);
         final ViewConfiguration configuration = ViewConfiguration.get(context);
         mTouchSlop = ViewConfigurationCompat.getScaledPagingTouchSlop(configuration);
-        mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
         mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
-        final float density = context.getResources().getDisplayMetrics().density;
-        mFlingDistance = (int) (MIN_DISTANCE_FOR_FLING * density);
+
     }
 
     /**
@@ -463,10 +459,10 @@ public class SlidingView extends FrameLayout {
                      * 另一个是根据所有目标位置计算出的滑动范围
                      * 取这俩个值中范围大的一个
                      */
-                    scrollX = Math.min(scrollX, Math.max(leftSlideBound, mPositionSet.leftBound));
-                    scrollX = Math.max(scrollX, Math.min(rightSlideBound, mPositionSet.rightBound));
-                    scrollY = Math.min(scrollY, Math.max(topSlideBound, mPositionSet.topBound));
-                    scrollY = Math.max(scrollY, Math.min(bottomSlideBound, mPositionSet.bottomBound));
+                    scrollX = Math.min(scrollX, Math.max(leftSlideBound, mPositionSet.getLeftBound()));
+                    scrollX = Math.max(scrollX, Math.min(rightSlideBound, mPositionSet.getRightBound()));
+                    scrollY = Math.min(scrollY, Math.max(topSlideBound, mPositionSet.getTopBound()));
+                    scrollY = Math.max(scrollY, Math.min(bottomSlideBound, mPositionSet.getBottomBound()));
                     scrollTo((int) scrollX, (int) scrollY);
                     return true;
                 }
@@ -859,434 +855,6 @@ public class SlidingView extends FrameLayout {
         if (!isDragging && !isSwitching && mSlidingCacheEnabled) {
             setSlidingCacheEnable(false);
         }
-    }
-
-    /**
-     * 封装位置的坐标信息
-     */
-    static class Coordinate {
-        /**
-         * x轴的坐标
-         */
-        public int x;
-        /**
-         * y轴的坐标
-         */
-        public int y;
-
-        /**
-         * 构建一个坐标，并设置他的值。
-         *
-         * @param x x轴的坐标
-         * @param y y轴的坐标
-         */
-        public Coordinate(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        /**
-         * 计算两坐标之间的距离
-         *
-         * @param c1 坐标1
-         * @param c2 坐标2
-         * @return 坐标c1与坐标c2间的距离
-         */
-        static public float computeDistance(Coordinate c1, Coordinate c2) {
-            return (float) Math.sqrt(Math.pow((c1.x - c2.x), 2) + Math.pow((c1.y - c2.y), 2));
-        }
-    }
-
-    /**
-     * 向量
-     */
-    static class Vector {
-        /**
-         * 向量在x轴上的坐标
-         */
-        int x;
-        /**
-         * 向量在y轴上的坐标
-         */
-        int y;
-        /**
-         * 向量的模
-         */
-        float length;
-
-        /**
-         * @param x 向量在x轴上的坐标
-         * @param y 向量在y轴上的坐标
-         */
-        public Vector(int x, int y) {
-            this.x = x;
-            this.y = y;
-            //计算向量的模
-            this.length = (float) Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-        }
-
-        /**
-         * 已知两点求向量
-         *
-         * @param start 起点
-         * @param end   终点
-         */
-        public Vector(Coordinate start, Coordinate end) {
-            this(end.x - start.x, end.y - start.y);
-        }
-
-        /**
-         * 求两向量间的夹角的余玄
-         *
-         * @param v1 向量1
-         * @param v2 向量2
-         * @return 夹角余玄
-         */
-        static public float computeCos(Vector v1, Vector v2) {
-            float cos1 = v1.x / v1.length;
-            float sin1 = v1.y / v1.length;
-            float cos2 = v2.x / v2.length;
-            float sin2 = v2.y / v2.length;
-
-            float cos = cos1 * cos2 + sin1 * sin2;
-            return cos;
-        }
-    }
-
-    /**
-     * 通过提供给一系列的方法来协助管理位置信息。
-     * <p>此外PositionManager还提供了一些列的方法，帮助你到达
-     * 到达目标位置。你可以通过{@link #guessPosition(float, float, int, int, int, int)}
-     * {@link #guessPosition(int, int)} {@link #guessPosition(int, int, int, int)}得到你的目标位置。
-     * </p>
-     */
-    class PositionHelper {
-        private PositionSet positionSet;
-
-        public PositionHelper(PositionSet positionSet) {
-            this.positionSet = positionSet;
-        }
-
-        /**
-         * 判断当前位置是否处于所有位置之一
-         *
-         * @param currentX 当前位置的x轴坐标
-         * @param currentY 当前位置的y轴坐标
-         * @return true 处于所有位置之一
-         */
-        public boolean isAtPosition(int currentX, int currentY) {
-            return isAtPosition(new Coordinate(currentX,currentY));
-        }
-
-        /**
-         * 判断当前位置是否处于所有位置之一
-         * @param coordinate 当前的坐标
-         * @return true 处于所有位置之一
-         */
-        public boolean isAtPosition(final Coordinate coordinate) {
-            if(coordinate==null)
-            {
-                throw new IllegalArgumentException("currentCoordinate is invaild");
-            }
-
-            Iterator iterator = positionSet.coordinateMap.entrySet().iterator();
-            while (iterator.hasNext()) {
-                Map.Entry<Integer, Coordinate> entry = (Map.Entry<Integer, Coordinate>) iterator.next();
-                Coordinate targetCoordinate = entry.getValue();
-                if (targetCoordinate.x == coordinate.x && targetCoordinate.y == coordinate.y) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        /**
-         * 根据当前的位置，猜测你想要到达的位置
-         * <p>此处的算法是寻找最近的一个位置作为想要到达的位置</p>
-         *
-         * @param currentX 当前位置的x轴坐标
-         * @param currentY 当前位置的y轴坐标
-         * @return 猜测想要到达的位置对应的Id
-         */
-        public int guessPosition(int currentX, int currentY) {
-            return this.guessPosition(new Coordinate(currentX,currentY));
-        }
-
-        /**
-         * 根据当前的位置，猜测你想要到达的位置
-         * @see #guessPosition(int, int)
-         * @param coordinate 当前的坐标
-         * @return 猜测想要到达的位置对应的Id
-         */
-        public int guessPosition(final Coordinate coordinate)
-        {
-            if(coordinate==null)
-            {
-                throw new IllegalArgumentException("currentCoordinate is invalid");
-            }
-            float min = Float.MAX_VALUE;
-            Iterator iterator = this.positionSet.getIterator();
-            int targetPosition = POSITION_INITIAL;
-            while (iterator.hasNext()) {
-                Map.Entry<Integer, Coordinate> entry = (Map.Entry<Integer, Coordinate>) iterator.next();
-                Coordinate targetCoordinate = entry.getValue();
-                float distance = Coordinate.computeDistance(targetCoordinate,coordinate);
-                if (distance < min) {
-                    min = distance;
-                    targetPosition = entry.getKey();
-                }
-            }
-            return targetPosition;
-        }
-
-        /**
-         * 猜测目标位置
-         *
-         * @param endX   滑动的起始位置的x轴坐标
-         * @param startY 滑动的起始位置的y轴坐标
-         * @param endX   当前位置的x轴坐标
-         * @param endY   当前位置的y轴坐标
-         * @return 猜测想要到达的位置对应的Id
-         * @see #guessPosition(Coordinate, Coordinate);
-         */
-        public int guessPosition(final int startX, final int startY
-                , final int endX, final int endY) {
-            return guessPosition(new Coordinate(startX, startY), new Coordinate(endX, endY));
-        }
-
-        /**
-         * 猜测目标位置
-         * <p>根据移动向量，猜测要到达的位置。移动向量由start和end得到。计算从start到各个位置的向量
-         * 与移动向量的夹角。取满足一下条件的位置作为所猜测的位置
-         * <ol>
-         * <li>夹角在0度到45度之间</li>
-         * <li>夹角最小</li>
-         * <li>从end到猜测位置的距离最短</li>
-         * <li>不为当前位置</li>
-         * </ol>
-         * 如果不满足以上条件，则返回当前位置。</p>
-         *
-         * @param start 向量的起点
-         * @param end   向量的终点
-         * @return
-         */
-        public int guessPosition(final Coordinate start,final Coordinate end) {
-            if(start==null||end==null)
-            {
-                throw new IllegalArgumentException("coordinate is invalid");
-            }
-            //精度取5度
-            final float precision = (float) Math.abs(Math.cos(Math.PI / 2) - Math.cos(Math.PI / 18 * 19));
-            int guess = positionSet.getCurrentPosition();
-            Vector vector1 = new Vector(start, end);
-            float maxCos = Float.MIN_VALUE;
-            float minDis = Float.MAX_VALUE;
-            Iterator<Map.Entry<Integer, Coordinate>> iterator = this.positionSet.getIterator();
-            while (iterator.hasNext()) {
-                Map.Entry<Integer, Coordinate> entry = iterator.next();
-                Coordinate coordinate = entry.getValue();
-                Vector vector2 = new Vector(start, coordinate);
-                float cos = Vector.computeCos(vector1, vector2);
-                //判断是否是当前位置
-                if (entry.getKey() == positionSet.getCurrentPosition()) {
-                    continue;
-                }
-                //判断是否在0度到45度之间
-                if (!(Math.cos(Math.PI / 4) <= cos && cos <= Math.cos(0))) {
-                    continue;
-                }
-                //判断cos是否大于maxCos
-                if ((cos - maxCos) > precision) {
-                    maxCos = cos;
-                    minDis = Coordinate.computeDistance(end, coordinate);
-                    guess = entry.getKey();
-                }
-                //判断cos是否等于maxCos且距离更小
-                if (Math.abs(cos - maxCos) < precision && Coordinate.computeDistance(end, coordinate) < minDis) {
-                    maxCos = cos;
-                    minDis = Coordinate.computeDistance(end, coordinate);
-                    guess = entry.getKey();
-                }
-            }
-            return guess;
-        }
-
-        /**
-         * 决定要到达的目标位置
-         * <p>算法首先根据滑动的起始位置和现在的位置，猜测一个想要到达的目标位置。然后判断滑动的速度
-         * 是否到达一个阈值，如果是则目标位置就是所猜测的位置。 如果速度没有达到阈值，判断已经滑动的
-         * 距离是否已经占总距离的一半，如果是，则目标位置就是所猜测的位置。否则目标位置就是滑动前的
-         * 位置。</p>
-         *
-         * @param velocityX x轴的滑动速度
-         * @param velocityY y轴的滑动速度
-         * @param startX  滑动起始位置的x轴坐标
-         * @param startY  滑动起始位置的y轴坐标
-         * @param endX  当前位置的x轴坐标
-         * @param endY  当前位置的y轴坐标
-         * @return 决定要到达的目标位置所对应的Id
-         */
-        public int guessPosition(float velocityX, float velocityY
-                , int startX, int startY
-                , int endX, int endY) {
-
-            int nextPosition = positionSet.getCurrentPosition();
-            int guess = guessPosition(startX, startY, endX, endY);
-            Coordinate desireP = this.positionSet.getPosition(guess);
-            if (DEBUG) {
-                Log.v(TAG, "geussPosition=" + guess);
-            }
-            Coordinate start = new Coordinate(startX, startY);
-            Coordinate end = new Coordinate(endX, endY);
-            float currentDistance = Coordinate.computeDistance(start, end);
-            float totalDistance = Coordinate.computeDistance(start, desireP);
-            float velocity = (float) Math.sqrt((velocityX * velocityX) + (velocityY * velocityY));
-
-            if (currentDistance > mFlingDistance && velocity > mMinimumVelocity && velocity != 0) {
-                nextPosition = guess;
-            } else {
-                if (Math.round(currentDistance / totalDistance) >= 1) {
-                    nextPosition = guess;
-                }
-            }
-            return nextPosition;
-        }
-    }
-
-    /**
-     * 位置集合。
-     * <p>该类内部提供了一个Map来管理所有的位置信息。该Map以位置对应的Id作为key，位置对应的坐标作为
-     * value。你可以通过{@link #addPosition(int, Coordinate)}和{@link #removePosition(int)}来增加和移
-     * 除位置。注意的是，该Map中默认有一个初始位
-     * 置。其位置对应的Id为{@link #POSITION_INITIAL},因此请不要添加以-1为Id的位置。初始位置的坐标只
-     * 能在构建PositionManager时设置 </p>
-     */
-    class PositionSet {
-
-        /**
-         * 构建一个PositionManager，并且设置初始位置为(0,0)
-         */
-        public PositionSet() {
-            this(new Coordinate(0, 0));
-        }
-
-        /**
-         * 构建一个PositionManager,并设置初始位置
-         *
-         * @param initialCoordinate 初始位置对应的坐标
-         */
-        public PositionSet(Coordinate initialCoordinate) {
-            coordinateMap = new HashMap<Integer, Coordinate>();
-            addPosition(POSITION_INITIAL, initialCoordinate);
-        }
-
-        /**
-         * 初始位置对应的Id
-         */
-        public static final int POSITION_INITIAL = -1;
-        private Map<Integer, Coordinate> coordinateMap;
-        private int leftBound = Integer.MIN_VALUE;
-        private int topBound = Integer.MIN_VALUE;
-        private int rightBound = Integer.MAX_VALUE;
-        private int bottomBound = Integer.MAX_VALUE;
-        private Integer currentPosition = POSITION_INITIAL;
-
-        /**
-         * 获取当前位置
-         *
-         * @return 当前位置
-         */
-        public Integer getCurrentPosition() {
-            return currentPosition;
-        }
-
-        /**
-         * 设置当前位置
-         *
-         * @param currentPosition 当前位置
-         */
-        public void setCurrentPosition(Integer currentPosition) {
-            this.currentPosition = currentPosition;
-        }
-
-        /**
-         * 增加一个位置
-         *
-         * @param positionId 位置所对应的Id。请不要设置为-1，-1默认为初始位置对应的Id。
-         * @param coordinate 位置所对应的坐标
-         * @return true 成功增加位置
-         */
-        public boolean addPosition(int positionId, Coordinate coordinate) {
-            boolean result = true;
-
-            if (coordinateMap.containsKey(positionId)) {
-                result = false;
-            } else if (coordinateMap.put(positionId, coordinate) == null) {
-                result = false;
-            }
-
-            setBound();
-
-            return result;
-        }
-
-        /**
-         * 移除一个位置
-         *
-         * @param positionId 位置对应的Id
-         * @return true 成功移除位置
-         */
-        public boolean removePosition(int positionId) {
-            if (positionId == POSITION_INITIAL) {
-                return false;
-            }
-            if (coordinateMap.remove(positionId) == null) {
-                return false;
-            } else {
-                setBound();
-                return true;
-            }
-        }
-
-        /**
-         * 获取对应Id的位置坐标
-         *
-         * @param positionId 位置对应的Id
-         * @return 位置对应的坐标
-         */
-        public Coordinate getPosition(int positionId) {
-            return coordinateMap.get(positionId);
-        }
-
-        /**
-         * 获取Iterator
-         */
-        Iterator<Map.Entry<Integer,Coordinate>> getIterator()
-        {
-            return this.coordinateMap.entrySet().iterator();
-        }
-
-        /**
-         * 根据所有位置的坐标，设置所能到达的上下左右的最大范围
-         */
-        private void setBound() {
-            leftBound = Integer.MIN_VALUE;
-            topBound = Integer.MIN_VALUE;
-            rightBound = Integer.MAX_VALUE;
-            bottomBound = Integer.MAX_VALUE;
-
-            Iterator iterator = coordinateMap.entrySet().iterator();
-            while (iterator.hasNext()) {
-                Map.Entry<Integer, Coordinate> entry = (Map.Entry<Integer, Coordinate>) iterator.next();
-                Coordinate coordinate = entry.getValue();
-
-                leftBound = (int) Math.min(leftBound, coordinate.x);
-                rightBound = (int) Math.max(rightBound, coordinate.x);
-                topBound = (int) Math.max(topBound, coordinate.y);
-                bottomBound = (int) Math.min(bottomBound, coordinate.y);
-            }
-        }
-
     }
 
     /**
