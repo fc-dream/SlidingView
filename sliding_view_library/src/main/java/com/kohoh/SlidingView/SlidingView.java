@@ -54,7 +54,7 @@ public class SlidingView extends FrameLayout {
     private boolean mEnableSlide;
     private boolean isDragging;
     private boolean mEnableInterceptAllGesture;
-    private boolean mDrawingCacheEnabled;
+    private boolean mSlidingCacheEnabled;
     private VelocityTracker mVelocityTracker;
     private static final int INVALID_POINTER = -1;
     private int mActivePointerId = INVALID_POINTER;
@@ -728,28 +728,23 @@ public class SlidingView extends FrameLayout {
         switchPosition(targetPosition, smoothAnim, forceSwitch, velocity);
     }
 
-    //TODO 硬件加速和绘制缓存之间，到底使用哪一个更好。对于不同的版本如何选择。
-
     /**
      * 决定是否开启绘制缓存。
-     * 根据我的理解，在不使用硬件加速的情况下。开启绘制缓存，有助于滑动的平滑
-     * 但是这似乎并非针对所有的系统版本。我翻过源码，现在知道的是
-     * 在API leave10似乎没有这方面的优化。据此推断API leave10之前也没有优化
-     * 在API leave19有相关的优化。
-     * 限于时间问题没有再进一步的研究，放在以后和硬件加速的开关一起考虑吧
+     * <p>在开启绘制缓存的情况下，会减少绘制的操作。进而使得滑动更加的平滑。但是在开启硬件加速的情况
+     * 下，完全没有必要开启绘制缓存。开启反倒会增加不必要的内存开销。<br>这里只是开启内部子视图的绘
+     * 制缓存。SlidingView在滑动过程中不断调用{@link #invalidate()},所以开启绘制缓存完全没有必要。反
+     * 倒是会增加运算的开销</p>
      */
-    @Override
-    public void setDrawingCacheEnabled(boolean enabled) {
+    private void setSlidingCacheEnable(boolean enable) {
 
-        if (mDrawingCacheEnabled != enabled) {
-            super.setDrawingCacheEnabled(enabled);
-            mDrawingCacheEnabled = enabled;
+        if (mSlidingCacheEnabled != enable) {
+            mSlidingCacheEnabled = enable;
 
             final int l = getChildCount();
             for (int i = 0; i < l; i++) {
                 final View child = getChildAt(i);
                 if (child.getVisibility() != GONE) {
-                    child.setDrawingCacheEnabled(enabled);
+                    child.setDrawingCacheEnabled(enable);
                 }
             }
         }
@@ -859,13 +854,13 @@ public class SlidingView extends FrameLayout {
     @Override
     protected void onDraw(Canvas canvas) {
         //如果正在拖动或者切换，那么开启绘制缓存
-        if ((isDragging || isSwitching) && !mDrawingCacheEnabled) {
-            setDrawingCacheEnabled(true);
+        if ((isDragging || isSwitching) && !mSlidingCacheEnabled) {
+            setSlidingCacheEnable(true);
         }
         super.onDraw(canvas);
         //如果没有在拖动，也没有在切换，那么关闭绘制缓存
-        if (!isDragging && !isSwitching && mDrawingCacheEnabled) {
-            setDrawingCacheEnabled(false);
+        if (!isDragging && !isSwitching && mSlidingCacheEnabled) {
+            setSlidingCacheEnable(false);
         }
     }
 
