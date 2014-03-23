@@ -1,6 +1,8 @@
 //TODO 更改现有的坐标系
 //TODO slidebound似乎没有必要设置这么多set方法，一个就够了
 //TODO 在开启硬件加速的情况下不似乎不需要开启绘制缓存
+//TODO 用SparseArray代替PositionSet中的Map
+//TODO 统一代码规范，变量名和方法参数的final
 package com.kohoh.SlidingView;
 
 import android.content.Context;
