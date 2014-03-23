@@ -105,7 +105,7 @@ public class SlidingView extends FrameLayout {
         super(context);
         init();
         mPositionSet = new PositionSet(new Coordinate(initialX, initialY));
-        mPositionHelper = new PositionHelper(mPositionSet,context);
+        mPositionHelper = new PositionHelper(mPositionSet, context);
         leftSlideBound = initialX;
         rightSlideBound = initialX;
         topSlideBound = initialY;
@@ -157,7 +157,7 @@ public class SlidingView extends FrameLayout {
         int initialX = (int) ta.getDimension(R.styleable.SlidingView_initialX, 0);
         int initialY = (int) ta.getDimension(R.styleable.SlidingView_initialY, 0);
         mPositionSet = new PositionSet(new Coordinate(initialX, initialY));
-        mPositionHelper = new PositionHelper(mPositionSet,context);
+        mPositionHelper = new PositionHelper(mPositionSet, context);
         leftSlideBound = (int) ta.getDimension(R.styleable.SlidingView_leftSlideBound, initialX);
         rightSlideBound = (int) ta.getDimension(R.styleable.SlidingView_rightSlideBound, initialX);
         topSlideBound = (int) ta.getDimension(R.styleable.SlidingView_topSlideBound, initialY);
@@ -264,7 +264,6 @@ public class SlidingView extends FrameLayout {
      * @param y          目标位置的y轴坐标，单位像素
      */
     public void addPosition(int positionId, int x, int y) {
-
         mPositionSet.addPosition(positionId, new Coordinate(x, y));
     }
 
@@ -399,8 +398,9 @@ public class SlidingView extends FrameLayout {
              */
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
-                if (!isDragging && !mPositionHelper.isAtPosition(getScrollX(), getScrollY())) {
-                    int position = mPositionHelper.guessPosition(getScrollX(), getScrollY());
+                Coordinate coordinate = transformCoordinate(getScrollX(), getScrollY());
+                if (!isDragging && !mPositionHelper.isAtPosition(coordinate)) {
+                    int position = mPositionHelper.guessPosition(coordinate);
                     switchPosition(position, true, true, 0);
                 }
                 break;
@@ -459,8 +459,8 @@ public class SlidingView extends FrameLayout {
                      * 另一个是根据所有目标位置计算出的滑动范围
                      * 取这俩个值中范围大的一个
                      */
-                    scrollX = Math.min(scrollX, Math.max(leftSlideBound, mPositionSet.getLeftBound()));
-                    scrollX = Math.max(scrollX, Math.min(rightSlideBound, mPositionSet.getRightBound()));
+                    scrollX = Math.min(scrollX, Math.max(leftSlideBound, (0 - mPositionSet.getLeftBound())));
+                    scrollX = Math.max(scrollX, Math.min(rightSlideBound, (0 - mPositionSet.getRightBound())));
                     scrollY = Math.min(scrollY, Math.max(topSlideBound, mPositionSet.getTopBound()));
                     scrollY = Math.max(scrollY, Math.min(bottomSlideBound, mPositionSet.getBottomBound()));
                     scrollTo((int) scrollX, (int) scrollY);
@@ -471,26 +471,26 @@ public class SlidingView extends FrameLayout {
             case MotionEvent.ACTION_UP:
                 if (isDragging) {
                     mVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
-                    final int initialVelocityX = (int) VelocityTrackerCompat.getXVelocity(
+                    final float velocityX = VelocityTrackerCompat.getXVelocity(
                             mVelocityTracker, mActivePointerId);
-                    final int initialVelocityY = (int) VelocityTrackerCompat.getYVelocity(
+                    final float velocityY = VelocityTrackerCompat.getYVelocity(
                             mVelocityTracker, mActivePointerId);
-                    final int scrollX = getScrollX();
-                    final int scrollY = getScrollY();
-
+                    float velocity = (float) Math.sqrt(Math.pow(velocityX, 2) + Math.pow(velocityY, 2));
+                    Coordinate start = transformCoordinate(mInitialScrollX, mInitialScrollY);
+                    Coordinate end = transformCoordinate(getScrollX(), getScrollY());
                     //根据滑动的速率、初始位置、现在的位置，决定要到达的目标位置
-                    int position = mPositionHelper.guessPosition(initialVelocityX,
-                            initialVelocityY, mInitialScrollX, mInitialScrollY, scrollX, scrollY);
-                    switchPosition(position, true, true, initialVelocityX, initialVelocityY);
-                } else if (!mPositionHelper.isAtPosition(getScrollX(), getScrollY())) {
+                    int position = mPositionHelper.guessPosition(velocity, start, end);
+                    switchPosition(position, true, true, (int) velocityX, (int) velocityY);
+                } else if (!mPositionHelper.isAtPosition(transformCoordinate(getScrollX(), getScrollY()))) {
                     //如果没有滑动，但也不再任意一个目标位置，那么就找一个最近的位置作为要到达的目标位置
-                    int poition = mPositionHelper.guessPosition(getScrollX(), getScrollY());
+                    Coordinate coordinate = transformCoordinate(getScrollX(), getScrollY());
+                    int poition = mPositionHelper.guessPosition(coordinate);
                     switchPosition(poition, true, true, 0);
                 }
                 endDrag();
                 return true;
             case MotionEvent.ACTION_CANCEL:
-                switchPosition(mPositionSet.getCurrentPosition(), true, true, 0);
+                switchPosition(mPositionSet.getCurrentPositionId(), true, true, 0);
                 endDrag();
                 return true;
             default:
@@ -627,9 +627,10 @@ public class SlidingView extends FrameLayout {
         } else {
             if (isSwitching) {
                 isSwitching = false;
-                if (mPositionHelper.isAtPosition(getScrollX(), getScrollY())) {
+                Coordinate coordinate = transformCoordinate(getScrollX(), getScrollY());
+                if (mPositionHelper.isAtPosition(coordinate)) {
                     if (mSwitchedListener != null) {
-                        mSwitchedListener.onSwitched(mPositionSet.getCurrentPosition());
+                        mSwitchedListener.onSwitched(mPositionSet.getCurrentPositionId());
                     }
                 }
             }
@@ -686,8 +687,8 @@ public class SlidingView extends FrameLayout {
             return;
         }
 
-        Coordinate targetCoordinate = this.mPositionSet.getPosition(targetPosition);
-        Integer currentPosition = mPositionSet.getCurrentPosition();
+        Coordinate targetCoordinate = transformCoordinate(this.mPositionSet.getPosition(targetPosition));
+        Integer currentPosition = mPositionSet.getCurrentPositionId();
 
         if (targetCoordinate == null) {
             return;
@@ -697,7 +698,7 @@ public class SlidingView extends FrameLayout {
             return;
         }
 
-        mPositionSet.setCurrentPosition(targetPosition);
+        mPositionSet.setCurrentPositionId(targetPosition);
         completeSwitch();
         if (smoothAnim) {
             smoothScrollTo(targetCoordinate.x, targetCoordinate.y, velocity);
@@ -840,7 +841,7 @@ public class SlidingView extends FrameLayout {
         super.onSizeChanged(w, h, oldw, oldh);
         // Make sure scroll position is set correctly.
         if (w != oldw) {
-            switchPosition(mPositionSet.getCurrentPosition(), false, true, 0);
+            switchPosition(mPositionSet.getCurrentPositionId(), false, true, 0);
         }
     }
 
@@ -855,6 +856,27 @@ public class SlidingView extends FrameLayout {
         if (!isDragging && !isSwitching && mSlidingCacheEnabled) {
             setSlidingCacheEnable(false);
         }
+    }
+
+    /**
+     * 将坐标进行坐标系的转换
+     *
+     * @param oldCoordinate
+     * @return
+     */
+    private Coordinate transformCoordinate(final Coordinate oldCoordinate) {
+        if (oldCoordinate == null) {
+            throw new IllegalArgumentException("coordinate is invaild");
+        }
+
+        return new Coordinate((0 - oldCoordinate.x), oldCoordinate.y);
+    }
+
+    /**
+     * 将坐标进行坐标系的转换
+     */
+    private Coordinate transformCoordinate(final int x, final int y) {
+        return this.transformCoordinate(new Coordinate(x, y));
     }
 
     /**

@@ -47,7 +47,7 @@ public class PositionSet {
      *
      * @return 当前位置
      */
-    public Integer getCurrentPosition() {
+    public int getCurrentPositionId() {
         return currentPosition;
     }
 
@@ -56,7 +56,7 @@ public class PositionSet {
      *
      * @param currentPosition 当前位置
      */
-    public void setCurrentPosition(Integer currentPosition) {
+    public void setCurrentPositionId(int currentPosition) {
         this.currentPosition = currentPosition;
     }
 
@@ -120,9 +120,9 @@ public class PositionSet {
      * 根据所有位置的坐标，设置所能到达的上下左右的最大范围
      */
     private void setBound() {
-        leftBound = Integer.MIN_VALUE;
+        leftBound = Integer.MAX_VALUE;
         topBound = Integer.MIN_VALUE;
-        rightBound = Integer.MAX_VALUE;
+        rightBound = Integer.MIN_VALUE;
         bottomBound = Integer.MAX_VALUE;
 
         Iterator iterator = coordinateMap.entrySet().iterator();
@@ -130,8 +130,8 @@ public class PositionSet {
             Map.Entry<Integer, Coordinate> entry = (Map.Entry<Integer, Coordinate>) iterator.next();
             Coordinate coordinate = entry.getValue();
 
-            leftBound = (int) Math.max(leftBound, coordinate.x);
-            rightBound = (int) Math.min(rightBound, coordinate.x);
+            leftBound = (int) Math.min(leftBound, coordinate.x);
+            rightBound = (int) Math.max(rightBound, coordinate.x);
             topBound = (int) Math.max(topBound, coordinate.y);
             bottomBound = (int) Math.min(bottomBound, coordinate.y);
         }

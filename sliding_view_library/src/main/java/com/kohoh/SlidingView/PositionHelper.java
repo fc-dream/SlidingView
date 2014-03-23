@@ -16,20 +16,20 @@ import java.util.Map;
  */
 class PositionHelper {
     private PositionSet positionSet;
-    private final boolean DEBUG=true;
-    private final String TAG="PositionHelper";
-    private int mFlingDistance;
-    private int mMinimumVelocity;
+    private final boolean DEBUG = true;
+    private final String TAG = "PositionHelper";
+    private int flingDistance;
+    private int minimumVelocity;
     private static final int MIN_DISTANCE_FOR_FLING = 25; // in dip
     private Context context;
 
-    public PositionHelper(PositionSet positionSet,Context context) {
-        this.context=context;
+    public PositionHelper(PositionSet positionSet, Context context) {
+        this.context = context;
         this.positionSet = positionSet;
         final ViewConfiguration configuration = ViewConfiguration.get(context);
-        mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
+        minimumVelocity = configuration.getScaledMinimumFlingVelocity();
         final float density = context.getResources().getDisplayMetrics().density;
-        mFlingDistance = (int) (MIN_DISTANCE_FOR_FLING * density);
+        flingDistance = (int) (MIN_DISTANCE_FOR_FLING * density);
     }
 
     /**
@@ -40,17 +40,17 @@ class PositionHelper {
      * @return true 处于所有位置之一
      */
     public boolean isAtPosition(int currentX, int currentY) {
-        return isAtPosition(new Coordinate(currentX,currentY));
+        return isAtPosition(new Coordinate(currentX, currentY));
     }
 
     /**
      * 判断当前位置是否处于所有位置之一
+     *
      * @param coordinate 当前的坐标
      * @return true 处于所有位置之一
      */
     public boolean isAtPosition(final Coordinate coordinate) {
-        if(coordinate==null)
-        {
+        if (coordinate == null) {
             throw new IllegalArgumentException("currentCoordinate is invaild");
         }
 
@@ -74,19 +74,18 @@ class PositionHelper {
      * @return 猜测想要到达的位置对应的Id
      */
     public int guessPosition(int currentX, int currentY) {
-        return this.guessPosition(new Coordinate(currentX,currentY));
+        return this.guessPosition(new Coordinate(currentX, currentY));
     }
 
     /**
      * 根据当前的位置，猜测你想要到达的位置
-     * @see #guessPosition(int, int)
+     *
      * @param coordinate 当前的坐标
      * @return 猜测想要到达的位置对应的Id
+     * @see #guessPosition(int, int)
      */
-    public int guessPosition(final Coordinate coordinate)
-    {
-        if(coordinate==null)
-        {
+    public int guessPosition(final Coordinate coordinate) {
+        if (coordinate == null) {
             throw new IllegalArgumentException("currentCoordinate is invalid");
         }
         float min = Float.MAX_VALUE;
@@ -95,7 +94,7 @@ class PositionHelper {
         while (iterator.hasNext()) {
             Map.Entry<Integer, Coordinate> entry = (Map.Entry<Integer, Coordinate>) iterator.next();
             Coordinate targetCoordinate = entry.getValue();
-            float distance = Coordinate.computeDistance(targetCoordinate,coordinate);
+            float distance = Coordinate.computeDistance(targetCoordinate, coordinate);
             if (distance < min) {
                 min = distance;
                 targetPosition = entry.getKey();
@@ -135,14 +134,13 @@ class PositionHelper {
      * @param end   向量的终点
      * @return
      */
-    public int guessPosition(final Coordinate start,final Coordinate end) {
-        if(start==null||end==null)
-        {
+    public int guessPosition(final Coordinate start, final Coordinate end) {
+        if (start == null || end == null) {
             throw new IllegalArgumentException("coordinate is invalid");
         }
         //精度取5度
         final float precision = (float) Math.abs(Math.cos(Math.PI / 2) - Math.cos(Math.PI / 18 * 19));
-        int guess = positionSet.getCurrentPosition();
+        int guess = positionSet.getCurrentPositionId();
         Vector vector1 = new Vector(start, end);
         float maxCos = Float.MIN_VALUE;
         float minDis = Float.MAX_VALUE;
@@ -153,7 +151,7 @@ class PositionHelper {
             Vector vector2 = new Vector(start, coordinate);
             float cos = Vector.computeCos(vector1, vector2);
             //判断是否是当前位置
-            if (entry.getKey() == positionSet.getCurrentPosition()) {
+            if (entry.getKey() == positionSet.getCurrentPositionId()) {
                 continue;
             }
             //判断是否在0度到45度之间
@@ -185,35 +183,40 @@ class PositionHelper {
      *
      * @param velocityX x轴的滑动速度
      * @param velocityY y轴的滑动速度
-     * @param startX  滑动起始位置的x轴坐标
-     * @param startY  滑动起始位置的y轴坐标
-     * @param endX  当前位置的x轴坐标
-     * @param endY  当前位置的y轴坐标
+     * @param startX    滑动起始位置的x轴坐标
+     * @param startY    滑动起始位置的y轴坐标
+     * @param endX      当前位置的x轴坐标
+     * @param endY      当前位置的y轴坐标
      * @return 决定要到达的目标位置所对应的Id
      */
-    public int guessPosition(float velocityX, float velocityY
-            , int startX, int startY
-            , int endX, int endY) {
+    public int guessPosition(float velocityX, float velocityY, int startX, int startY, int endX,
+                             int endY) {
+        return guessPosition((float) Math.sqrt(Math.pow(velocityX, 2) + Math.pow(velocityY, 2)), new
+                Coordinate(startX, startY), new Coordinate(endX, endY));
+    }
 
-        int nextPosition = positionSet.getCurrentPosition();
-        int guess = guessPosition(startX, startY, endX, endY);
-        Coordinate desireP = this.positionSet.getPosition(guess);
+    public int guessPosition(float velocity, Coordinate start, Coordinate end) {
+        if (start == null || end == null) {
+            throw new IllegalArgumentException("coordinate is invalid");
+        }
+
+        int desire = guessPosition(start, end);
+        int guess = this.positionSet.getCurrentPositionId();
+
+        Coordinate coordinate = this.positionSet.getPosition(desire);
+        float currentDistance = Coordinate.computeDistance(start, end);
+        float totalDistance = Coordinate.computeDistance(start, coordinate);
+
+        if (currentDistance > flingDistance && velocity > minimumVelocity) {
+            guess = desire;
+        } else if (Math.round(currentDistance / totalDistance) >= 1) {
+            guess = desire;
+        }
+
         if (DEBUG) {
             Log.v(TAG, "geussPosition=" + guess);
         }
-        Coordinate start = new Coordinate(startX, startY);
-        Coordinate end = new Coordinate(endX, endY);
-        float currentDistance = Coordinate.computeDistance(start, end);
-        float totalDistance = Coordinate.computeDistance(start, desireP);
-        float velocity = (float) Math.sqrt((velocityX * velocityX) + (velocityY * velocityY));
 
-        if (currentDistance > mFlingDistance && velocity > mMinimumVelocity && velocity != 0) {
-            nextPosition = guess;
-        } else {
-            if (Math.round(currentDistance / totalDistance) >= 1) {
-                nextPosition = guess;
-            }
-        }
-        return nextPosition;
+        return guess;
     }
 }
