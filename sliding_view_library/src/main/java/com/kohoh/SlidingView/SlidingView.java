@@ -1,5 +1,3 @@
-//TODO 更改现有的坐标系
-//TODO slidebound似乎没有必要设置这么多set方法，一个就够了
 //TODO 在开启硬件加速的情况下不似乎不需要开启绘制缓存
 //TODO 用SparseArray代替PositionSet中的Map
 //TODO 统一代码规范，变量名和方法参数的final
@@ -62,10 +60,6 @@ public class SlidingView extends FrameLayout {
     private int mInitialScrollY;
     private float mLastX;
     private float mLastY;
-    private int leftSlideBound;
-    private int topSlideBound;
-    private int rightSlideBound;
-    private int bottomSlideBound;
     private Set<View> mIgnoreViewSet;
     private onSwitchedListener mSwitchedListener;
     public static final int POSITION_INITIAL = PositionSet.POSITION_INITIAL;
@@ -108,10 +102,6 @@ public class SlidingView extends FrameLayout {
         init();
         mPositionSet = new PositionSet(new Coordinate(initialX, initialY));
         mPositionHelper = new PositionHelper(mPositionSet, context);
-        leftSlideBound = initialX;
-        rightSlideBound = initialX;
-        topSlideBound = initialY;
-        bottomSlideBound = initialY;
         mEnableDrag = true;
         mEnableSlide = true;
         mEnableInterceptAllGesture = false;
@@ -160,10 +150,6 @@ public class SlidingView extends FrameLayout {
         int initialY = (int) ta.getDimension(R.styleable.SlidingView_initialY, 0);
         mPositionSet = new PositionSet(new Coordinate(initialX, initialY));
         mPositionHelper = new PositionHelper(mPositionSet, context);
-        leftSlideBound = (int) ta.getDimension(R.styleable.SlidingView_leftSlideBound, initialX);
-        rightSlideBound = (int) ta.getDimension(R.styleable.SlidingView_rightSlideBound, initialX);
-        topSlideBound = (int) ta.getDimension(R.styleable.SlidingView_topSlideBound, initialY);
-        bottomSlideBound = (int) ta.getDimension(R.styleable.SlidingView_bottomSlideBound, initialY);
         mEnableDrag = ta.getBoolean(R.styleable.SlidingView_dragEnable, true);
         mEnableSlide = ta.getBoolean(R.styleable.SlidingView_slideEnable, true);
         mEnableInterceptAllGesture = ta.getBoolean(R.styleable.SlidingView_interceptAllGestureEnable, false);
@@ -289,10 +275,10 @@ public class SlidingView extends FrameLayout {
      * {@link #SlidingView(android.content.Context, int, int)}或者.xml中的initialX和initialY属性，
      * 可以设置SlidingView的初始位置</p>
      *
-     * @param leftSlideBound 左侧滑动范围
+     * @param bound 左侧滑动范围
      */
-    public void setLeftSlideBound(int leftSlideBound) {
-        this.leftSlideBound = leftSlideBound;
+    public void setLeftSlideBound(int bound) {
+        mPositionSet.setLeftBound(bound);
     }
 
     /**
@@ -302,7 +288,7 @@ public class SlidingView extends FrameLayout {
      * @see #setLeftSlideBound(int)
      */
     public int getLeftSlideBound() {
-        return this.leftSlideBound;
+        return mPositionSet.getLeftBound();
     }
 
     /**
@@ -313,10 +299,10 @@ public class SlidingView extends FrameLayout {
      * {@link #SlidingView(android.content.Context, int, int)}或者.xml中的initialX和initialY属性，
      * 可以设置SlidingView的初始位置</p>
      *
-     * @param rightSlideBound 右侧滑动范围
+     * @param bound 右侧滑动范围
      */
-    public void setRightSlideBound(int rightSlideBound) {
-        this.rightSlideBound = rightSlideBound;
+    public void setRightSlideBound(int bound) {
+        mPositionSet.setRightBound(bound);
     }
 
     /**
@@ -326,7 +312,7 @@ public class SlidingView extends FrameLayout {
      * @see #setRightSlideBound(int)
      */
     public int getRightSlideBound() {
-        return this.rightSlideBound;
+        return mPositionSet.getRightBound();
     }
 
     /**
@@ -337,10 +323,10 @@ public class SlidingView extends FrameLayout {
      * {@link #SlidingView(android.content.Context, int, int)}或者.xml中的initialX和initialY属性，
      * 可以设置SlidingView的初始位置</p>
      *
-     * @param topSlideBound 顶侧滑动范围
+     * @param bound 顶侧滑动范围
      */
-    public void setTopSlideBound(int topSlideBound) {
-        this.topSlideBound = topSlideBound;
+    public void setTopSlideBound(int bound) {
+        mPositionSet.setTopBound(bound);
     }
 
     /**
@@ -350,7 +336,7 @@ public class SlidingView extends FrameLayout {
      * @see #setTopSlideBound(int)
      */
     public int getTopSlideBound() {
-        return this.topSlideBound;
+        return mPositionSet.getTopBound();
     }
 
     /**
@@ -361,10 +347,10 @@ public class SlidingView extends FrameLayout {
      * 通过{@link #SlidingView(android.content.Context, int, int)}或者.xml中的initialX和initialY属性，
      * 可以设置SlidingView的初始位置</p>
      *
-     * @param bottomSlideBound 底侧滑动范围
+     * @param bound 底侧滑动范围
      */
-    public void setBottomSlideBound(int bottomSlideBound) {
-        this.bottomSlideBound = bottomSlideBound;
+    public void setBottomSlideBound(int bound) {
+        mPositionSet.setBottomBound(bound);
     }
 
     /**
@@ -374,7 +360,11 @@ public class SlidingView extends FrameLayout {
      * @see #setBottomSlideBound(int)
      */
     public int getBottomSlideBound() {
-        return this.bottomSlideBound;
+        return mPositionSet.getBottomBound();
+    }
+
+    public void setBound(int left, int top, int right, int bottom) {
+        mPositionSet.setBound(left, top, right, bottom);
     }
 
     @Override
@@ -461,10 +451,10 @@ public class SlidingView extends FrameLayout {
                      * 另一个是根据所有目标位置计算出的滑动范围
                      * 取这俩个值中范围大的一个
                      */
-                    scrollX = Math.min(scrollX, Math.max(leftSlideBound, (0 - mPositionSet.getLeftBound())));
-                    scrollX = Math.max(scrollX, Math.min(rightSlideBound, (0 - mPositionSet.getRightBound())));
-                    scrollY = Math.min(scrollY, Math.max(topSlideBound, mPositionSet.getTopBound()));
-                    scrollY = Math.max(scrollY, Math.min(bottomSlideBound, mPositionSet.getBottomBound()));
+                    scrollX = Math.min(scrollX, (0 - mPositionSet.getLeftBound()));
+                    scrollX = Math.max(scrollX, (0 - mPositionSet.getRightBound()));
+                    scrollY = Math.min(scrollY, mPositionSet.getTopBound());
+                    scrollY = Math.max(scrollY, mPositionSet.getBottomBound());
                     scrollTo((int) scrollX, (int) scrollY);
                     return true;
                 }

@@ -36,11 +36,15 @@ public class PositionSet {
      */
     public static final int POSITION_INITIAL = -1;
     private Map<Integer, Coordinate> coordinateMap;
-    private int leftBound = Integer.MIN_VALUE;
+    private int leftBound = Integer.MAX_VALUE;
     private int topBound = Integer.MIN_VALUE;
-    private int rightBound = Integer.MAX_VALUE;
+    private int rightBound = Integer.MIN_VALUE;
     private int bottomBound = Integer.MAX_VALUE;
     private Integer currentPosition = POSITION_INITIAL;
+    private int customLeftBound = Integer.MAX_VALUE;
+    private int customRightBound = Integer.MIN_VALUE;
+    private int customTopBound = Integer.MIN_VALUE;
+    private int customBottomBound = Integer.MAX_VALUE;
 
     /**
      * 获取当前位置
@@ -120,21 +124,39 @@ public class PositionSet {
      * 根据所有位置的坐标，设置所能到达的上下左右的最大范围
      */
     private void setBound() {
-        leftBound = Integer.MAX_VALUE;
-        topBound = Integer.MIN_VALUE;
-        rightBound = Integer.MIN_VALUE;
-        bottomBound = Integer.MAX_VALUE;
+        this.leftBound = Integer.MAX_VALUE;
+        this.topBound = Integer.MIN_VALUE;
+        this.rightBound = Integer.MIN_VALUE;
+        this.bottomBound = Integer.MAX_VALUE;
 
         Iterator iterator = coordinateMap.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<Integer, Coordinate> entry = (Map.Entry<Integer, Coordinate>) iterator.next();
             Coordinate coordinate = entry.getValue();
 
-            leftBound = (int) Math.min(leftBound, coordinate.x);
-            rightBound = (int) Math.max(rightBound, coordinate.x);
-            topBound = (int) Math.max(topBound, coordinate.y);
-            bottomBound = (int) Math.min(bottomBound, coordinate.y);
+            this.leftBound = Math.min(this.leftBound, coordinate.x);
+            this.rightBound = Math.max(this.rightBound, coordinate.x);
+            this.topBound = Math.max(this.topBound, coordinate.y);
+            this.bottomBound = Math.min(this.bottomBound, coordinate.y);
         }
+
+        this.leftBound = Math.min(this.leftBound, customLeftBound);
+        this.rightBound = Math.max(this.rightBound, customRightBound);
+        this.topBound = Math.max(this.topBound, customTopBound);
+        this.bottomBound = Math.min(this.bottomBound, customBottomBound);
+    }
+
+    public void setBound(int left, int top, int right, int bottom) {
+        this.customLeftBound = left;
+        this.customRightBound = right;
+        this.customTopBound = top;
+        this.customBottomBound = bottom;
+
+        setBound();
+    }
+
+    public void setLeftBound(int bound) {
+        setBound(bound, customTopBound, customRightBound, customBottomBound);
     }
 
     public int getLeftBound() {
@@ -145,13 +167,24 @@ public class PositionSet {
         return topBound;
     }
 
+    public void setTopBound(int bound) {
+        setBound(customLeftBound, bound, customRightBound, customBottomBound);
+    }
+
     public int getRightBound() {
         return rightBound;
+    }
+
+    public void setRightBound(int bound) {
+        setBound(customLeftBound, customTopBound, bound, customBottomBound);
     }
 
     public int getBottomBound() {
         return bottomBound;
     }
 
+    public void setBottomBound(int bound) {
+        setBound(customLeftBound, customTopBound, customRightBound, bound);
+    }
 
 }
