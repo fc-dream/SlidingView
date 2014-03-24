@@ -44,7 +44,7 @@ public class SlidingView extends FrameLayout {
 
     private int mMaximumVelocity;
 
-    private PositionSet mPositionSet;
+    private PositionManager mPositionManager;
     private PositionHelper mPositionHelper;
     private Scroller mScroller;
     private boolean mEnableDrag;
@@ -62,7 +62,6 @@ public class SlidingView extends FrameLayout {
     private float mLastY;
     private Set<View> mIgnoreViewSet;
     private onSwitchedListener mSwitchedListener;
-    public static final int POSITION_INITIAL = PositionSet.POSITION_INITIAL;
 
     /**
      * 构建一个SlidingView。<br>
@@ -100,8 +99,8 @@ public class SlidingView extends FrameLayout {
     public SlidingView(Context context, int initialX, int initialY) {
         super(context);
         init();
-        mPositionSet = new PositionSet(new Coordinate(initialX, initialY));
-        mPositionHelper = new PositionHelper(mPositionSet, context);
+        mPositionManager = new PositionManager(initialX, initialY);
+        mPositionHelper = new PositionHelper(mPositionManager, context);
         mEnableDrag = true;
         mEnableSlide = true;
         mEnableInterceptAllGesture = false;
@@ -148,8 +147,8 @@ public class SlidingView extends FrameLayout {
         final TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.SlidingView);
         int initialX = (int) ta.getDimension(R.styleable.SlidingView_initialX, 0);
         int initialY = (int) ta.getDimension(R.styleable.SlidingView_initialY, 0);
-        mPositionSet = new PositionSet(new Coordinate(initialX, initialY));
-        mPositionHelper = new PositionHelper(mPositionSet, context);
+        mPositionManager = new PositionManager(initialX, initialY);
+        mPositionHelper = new PositionHelper(mPositionManager, context);
         mEnableDrag = ta.getBoolean(R.styleable.SlidingView_dragEnable, true);
         mEnableSlide = ta.getBoolean(R.styleable.SlidingView_slideEnable, true);
         mEnableInterceptAllGesture = ta.getBoolean(R.styleable.SlidingView_interceptAllGestureEnable, false);
@@ -247,12 +246,12 @@ public class SlidingView extends FrameLayout {
      * <br>单位为像素。
      * <br>如果你想要知道为什么会有这么奇葩的坐标系，那是因为我是以scrollX和scrollY为参考的。</br></p>
      *
-     * @param positionId 目标位置的Id号，通过这个Id你可以简单的标识目标位置。请不要将Id设置为-1，这已经被占用。
-     * @param x          目标位置的x轴坐标，单位像素
-     * @param y          目标位置的y轴坐标，单位像素
+     * @param id 目标位置的Id号，通过这个Id你可以简单的标识目标位置。请不要将Id设置为-1，这已经被占用。
+     * @param x  目标位置的x轴坐标，单位像素
+     * @param y  目标位置的y轴坐标，单位像素
      */
-    public void addPosition(int positionId, int x, int y) {
-        mPositionSet.addPosition(positionId, new Coordinate(x, y));
+    public void addPosition(int id, int x, int y) {
+        mPositionManager.addPosition(id, x, y);
     }
 
     /**
@@ -263,8 +262,8 @@ public class SlidingView extends FrameLayout {
      *
      * @return SlidingView的初始位置坐标，如果为null的话，则没有这是初始位置坐标。
      */
-    public Coordinate getInitialPosition() {
-        return this.mPositionSet.getPosition(mPositionSet.POSITION_INITIAL);
+    public Position getInitialPosition() {
+        return this.mPositionManager.findPositionById(PositionManager.POSITION_INITIAL);
     }
 
     /**
@@ -278,7 +277,7 @@ public class SlidingView extends FrameLayout {
      * @param bound 左侧滑动范围
      */
     public void setLeftSlideBound(int bound) {
-        mPositionSet.setLeftBound(bound);
+        mPositionManager.setLeftBound(bound);
     }
 
     /**
@@ -288,7 +287,7 @@ public class SlidingView extends FrameLayout {
      * @see #setLeftSlideBound(int)
      */
     public int getLeftSlideBound() {
-        return mPositionSet.getLeftBound();
+        return mPositionManager.getLeftBound();
     }
 
     /**
@@ -302,7 +301,7 @@ public class SlidingView extends FrameLayout {
      * @param bound 右侧滑动范围
      */
     public void setRightSlideBound(int bound) {
-        mPositionSet.setRightBound(bound);
+        mPositionManager.setRightBound(bound);
     }
 
     /**
@@ -312,7 +311,7 @@ public class SlidingView extends FrameLayout {
      * @see #setRightSlideBound(int)
      */
     public int getRightSlideBound() {
-        return mPositionSet.getRightBound();
+        return mPositionManager.getRightBound();
     }
 
     /**
@@ -326,7 +325,7 @@ public class SlidingView extends FrameLayout {
      * @param bound 顶侧滑动范围
      */
     public void setTopSlideBound(int bound) {
-        mPositionSet.setTopBound(bound);
+        mPositionManager.setTopBound(bound);
     }
 
     /**
@@ -336,7 +335,7 @@ public class SlidingView extends FrameLayout {
      * @see #setTopSlideBound(int)
      */
     public int getTopSlideBound() {
-        return mPositionSet.getTopBound();
+        return mPositionManager.getTopBound();
     }
 
     /**
@@ -350,7 +349,7 @@ public class SlidingView extends FrameLayout {
      * @param bound 底侧滑动范围
      */
     public void setBottomSlideBound(int bound) {
-        mPositionSet.setBottomBound(bound);
+        mPositionManager.setBottomBound(bound);
     }
 
     /**
@@ -360,11 +359,11 @@ public class SlidingView extends FrameLayout {
      * @see #setBottomSlideBound(int)
      */
     public int getBottomSlideBound() {
-        return mPositionSet.getBottomBound();
+        return mPositionManager.getBottomBound();
     }
 
     public void setBound(int left, int top, int right, int bottom) {
-        mPositionSet.setBound(left, top, right, bottom);
+        mPositionManager.setBound(left, top, right, bottom);
     }
 
     @Override
@@ -451,10 +450,10 @@ public class SlidingView extends FrameLayout {
                      * 另一个是根据所有目标位置计算出的滑动范围
                      * 取这俩个值中范围大的一个
                      */
-                    scrollX = Math.min(scrollX, (0 - mPositionSet.getLeftBound()));
-                    scrollX = Math.max(scrollX, (0 - mPositionSet.getRightBound()));
-                    scrollY = Math.min(scrollY, mPositionSet.getTopBound());
-                    scrollY = Math.max(scrollY, mPositionSet.getBottomBound());
+                    scrollX = Math.min(scrollX, (0 - mPositionManager.getLeftBound()));
+                    scrollX = Math.max(scrollX, (0 - mPositionManager.getRightBound()));
+                    scrollY = Math.min(scrollY, mPositionManager.getTopBound());
+                    scrollY = Math.max(scrollY, mPositionManager.getBottomBound());
                     scrollTo((int) scrollX, (int) scrollY);
                     return true;
                 }
@@ -482,7 +481,7 @@ public class SlidingView extends FrameLayout {
                 endDrag();
                 return true;
             case MotionEvent.ACTION_CANCEL:
-                switchPosition(mPositionSet.getCurrentPositionId(), true, true, 0);
+                switchPosition(mPositionManager.getCurrentPositionId(), true, true, 0);
                 endDrag();
                 return true;
             default:
@@ -622,7 +621,7 @@ public class SlidingView extends FrameLayout {
                 Coordinate coordinate = transformCoordinate(getScrollX(), getScrollY());
                 if (mPositionHelper.isAtPosition(coordinate)) {
                     if (mSwitchedListener != null) {
-                        mSwitchedListener.onSwitched(mPositionSet.getCurrentPositionId());
+                        mSwitchedListener.onSwitched(mPositionManager.getCurrentPositionId());
                     }
                 }
             }
@@ -667,30 +666,31 @@ public class SlidingView extends FrameLayout {
     /**
      * 将SlidingView切换到指定的目标位置
      *
-     * @param targetPosition 目标位置对应的Id
-     * @param smoothAnim     是否使用动画效果
-     * @param forceSwitch    是否强化切换位置
-     * @param velocity       切换的速率
+     * @param targetPositionId 目标位置对应的Id
+     * @param smoothAnim       是否使用动画效果
+     * @param forceSwitch      是否强化切换位置
+     * @param velocity         切换的速率
      */
-    public void switchPosition(final int targetPosition, final boolean smoothAnim,
+    public void switchPosition(final int targetPositionId, final boolean smoothAnim,
                                final boolean forceSwitch, final int velocity) {
 
         if (!mEnableSlide) {
             return;
         }
 
-        Coordinate targetCoordinate = transformCoordinate(this.mPositionSet.getPosition(targetPosition));
-        Integer currentPosition = mPositionSet.getCurrentPositionId();
+        Coordinate targetCoordinate = transformCoordinate(this.mPositionManager.findPositionById(
+                targetPositionId).getCoordinate());
+        int currentPositionId = mPositionManager.getCurrentPositionId();
 
         if (targetCoordinate == null) {
             return;
         }
 
-        if (!forceSwitch && targetPosition == currentPosition) {
+        if (!forceSwitch && targetPositionId == currentPositionId) {
             return;
         }
 
-        mPositionSet.setCurrentPositionId(targetPosition);
+        mPositionManager.setCurrentPositionId(targetPositionId);
         completeSwitch();
         if (smoothAnim) {
             smoothScrollTo(targetCoordinate.x, targetCoordinate.y, velocity);
@@ -833,7 +833,7 @@ public class SlidingView extends FrameLayout {
         super.onSizeChanged(w, h, oldw, oldh);
         // Make sure scroll position is set correctly.
         if (w != oldw) {
-            switchPosition(mPositionSet.getCurrentPositionId(), false, true, 0);
+            switchPosition(mPositionManager.getCurrentPositionId(), false, true, 0);
         }
     }
 

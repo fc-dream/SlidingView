@@ -1,23 +1,23 @@
 package com.kohoh.SlidingView;
 
-import java.util.HashMap;
+import android.util.SparseArray;
+import com.kohoh.Exception.IllegalPosition;
 import java.util.Iterator;
-import java.util.Map;
 
 /**
  * 位置集合。
  * <p>该类内部提供了一个Map来管理所有的位置信息。该Map以位置对应的Id作为key，位置对应的坐标作为
- * value。你可以通过{@link #addPosition(int, Coordinate)}和{@link #removePosition(int)}来增加和移
+ * value。你可以通过{@link #addPosition(int, Coordinate)}和{@link #removePositionById(int)}来增加和移
  * 除位置。注意的是，该Map中默认有一个初始位
  * 置。其位置对应的Id为{@link #POSITION_INITIAL},因此请不要添加以-1为Id的位置。初始位置的坐标只
  * 能在构建PositionManager时设置 </p>
  */
-public class PositionSet {
+public class PositionManager {
 
     /**
      * 构建一个PositionManager，并且设置初始位置为(0,0)
      */
-    public PositionSet() {
+    public PositionManager() {
         this(new Coordinate(0, 0));
     }
 
@@ -26,21 +26,33 @@ public class PositionSet {
      *
      * @param initialCoordinate 初始位置对应的坐标
      */
-    public PositionSet(Coordinate initialCoordinate) {
-        coordinateMap = new HashMap<Integer, Coordinate>();
-        addPosition(POSITION_INITIAL, initialCoordinate);
+    public PositionManager(Coordinate initialCoordinate) {
+        positionSparseArray = new SparseArray<Position>();
+        addPosition(new Position(POSITION_INITIAL, initialCoordinate));
+    }
+
+    public PositionManager(final int initialX, final int initialY) {
+        this(new Coordinate(initialX, initialY));
+    }
+
+    public boolean isIdExisted(int id) {
+        if (positionSparseArray == null) {
+            throw new RuntimeException("positionSparesArray is null");
+        }
+
+        return (positionSparseArray.indexOfKey(id) >= 0);
     }
 
     /**
      * 初始位置对应的Id
      */
     public static final int POSITION_INITIAL = -1;
-    private Map<Integer, Coordinate> coordinateMap;
+    private SparseArray<Position> positionSparseArray;
     private int leftBound = Integer.MAX_VALUE;
     private int topBound = Integer.MIN_VALUE;
     private int rightBound = Integer.MIN_VALUE;
     private int bottomBound = Integer.MAX_VALUE;
-    private Integer currentPosition = POSITION_INITIAL;
+    private int currentPositionId = POSITION_INITIAL;
     private int customLeftBound = Integer.MAX_VALUE;
     private int customRightBound = Integer.MIN_VALUE;
     private int customTopBound = Integer.MIN_VALUE;
@@ -52,7 +64,7 @@ public class PositionSet {
      * @return 当前位置
      */
     public int getCurrentPositionId() {
-        return currentPosition;
+        return currentPositionId;
     }
 
     /**
@@ -61,28 +73,41 @@ public class PositionSet {
      * @param currentPosition 当前位置
      */
     public void setCurrentPositionId(int currentPosition) {
-        this.currentPosition = currentPosition;
+        this.currentPositionId = currentPosition;
     }
 
     /**
      * 增加一个位置
      *
-     * @param positionId 位置所对应的Id。请不要设置为-1，-1默认为初始位置对应的Id。
+     * @param id         位置所对应的Id。请不要设置为-1，-1默认为初始位置对应的Id。
      * @param coordinate 位置所对应的坐标
      * @return true 成功增加位置
      */
-    public boolean addPosition(int positionId, Coordinate coordinate) {
-        boolean result = true;
+    public boolean addPosition(int id, Coordinate coordinate) {
+        return addPosition(new Position(id, coordinate));
+    }
 
-        if (coordinateMap.containsKey(positionId)) {
-            result = false;
-        } else if (coordinateMap.put(positionId, coordinate) == null) {
-            result = false;
+    public boolean addPosition(int id, int x, int y) {
+        return addPosition(new Position(id, x, y));
+    }
+
+    public boolean addPosition(Position position) {
+        if (position == null) {
+            throw new IllegalPosition("position is null");
         }
 
-        setBound();
+        if (isIdExisted(position.id)) {
+            throw new IllegalPosition("position'id is existed");
+        }
 
-        return result;
+        if(isIdExisted(position.id))
+        {
+            return false;
+        }
+
+        positionSparseArray.put(position.getId(), position);
+        setBound();
+        return true;
     }
 
     /**
@@ -91,16 +116,18 @@ public class PositionSet {
      * @param positionId 位置对应的Id
      * @return true 成功移除位置
      */
-    public boolean removePosition(int positionId) {
+    public boolean removePositionById(int positionId) {
         if (positionId == POSITION_INITIAL) {
+            throw new IllegalPosition("can't remove initial position");
+        }
+
+        if(isIdExisted(positionId))
+        {
             return false;
         }
-        if (coordinateMap.remove(positionId) == null) {
-            return false;
-        } else {
-            setBound();
-            return true;
-        }
+        positionSparseArray.remove(positionId);
+        setBound();
+        return true;
     }
 
     /**
@@ -109,15 +136,40 @@ public class PositionSet {
      * @param positionId 位置对应的Id
      * @return 位置对应的坐标
      */
-    public Coordinate getPosition(int positionId) {
-        return coordinateMap.get(positionId);
+    public Position findPositionById(int positionId) {
+        return positionSparseArray.get(positionId);
     }
 
     /**
      * 获取Iterator
      */
-    Iterator<Map.Entry<Integer, Coordinate>> getIterator() {
-        return this.coordinateMap.entrySet().iterator();
+    Iterator<Position> getIterator() {
+        if (positionSparseArray == null) {
+            throw new RuntimeException("positionSparseArray is null");
+        }
+
+        return new Iterator<Position>() {
+
+            int cursor = 0;
+            int size = positionSparseArray.size();
+
+            @Override
+            public boolean hasNext() {
+                return (cursor < size);
+            }
+
+            @Override
+            public Position next() {
+                Position position = positionSparseArray.valueAt(cursor);
+                cursor++;
+                return position;
+            }
+
+            @Override
+            public void remove() {
+                positionSparseArray.remove(positionSparseArray.keyAt(cursor));
+            }
+        };
     }
 
     /**
@@ -129,10 +181,10 @@ public class PositionSet {
         this.rightBound = Integer.MIN_VALUE;
         this.bottomBound = Integer.MAX_VALUE;
 
-        Iterator iterator = coordinateMap.entrySet().iterator();
+        Iterator iterator = getIterator();
         while (iterator.hasNext()) {
-            Map.Entry<Integer, Coordinate> entry = (Map.Entry<Integer, Coordinate>) iterator.next();
-            Coordinate coordinate = entry.getValue();
+            Position position = (Position) iterator.next();
+            Coordinate coordinate = position.getCoordinate();
 
             this.leftBound = Math.min(this.leftBound, coordinate.x);
             this.rightBound = Math.max(this.rightBound, coordinate.x);

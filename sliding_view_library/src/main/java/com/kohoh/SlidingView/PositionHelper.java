@@ -4,8 +4,9 @@ import android.content.Context;
 import android.util.Log;
 import android.view.ViewConfiguration;
 
+import com.kohoh.Exception.IllegalCoordinate;
+
 import java.util.Iterator;
-import java.util.Map;
 
 /**
  * 通过提供给一系列的方法来协助管理位置信息。
@@ -15,7 +16,7 @@ import java.util.Map;
  * </p>
  */
 class PositionHelper {
-    private PositionSet positionSet;
+    private PositionManager positionManager;
     private final boolean DEBUG = true;
     private final String TAG = "PositionHelper";
     private int flingDistance;
@@ -23,9 +24,9 @@ class PositionHelper {
     private static final int MIN_DISTANCE_FOR_FLING = 25; // in dip
     private Context context;
 
-    public PositionHelper(PositionSet positionSet, Context context) {
+    public PositionHelper(PositionManager positionManager, Context context) {
         this.context = context;
-        this.positionSet = positionSet;
+        this.positionManager = positionManager;
         final ViewConfiguration configuration = ViewConfiguration.get(context);
         minimumVelocity = configuration.getScaledMinimumFlingVelocity();
         final float density = context.getResources().getDisplayMetrics().density;
@@ -54,10 +55,10 @@ class PositionHelper {
             throw new IllegalArgumentException("currentCoordinate is invaild");
         }
 
-        Iterator iterator = this.positionSet.getIterator();
+        Iterator iterator = this.positionManager.getIterator();
         while (iterator.hasNext()) {
-            Map.Entry<Integer, Coordinate> entry = (Map.Entry<Integer, Coordinate>) iterator.next();
-            Coordinate targetCoordinate = entry.getValue();
+            Position position = (Position) iterator.next();
+            Coordinate targetCoordinate = position.getCoordinate();
             if (targetCoordinate.x == coordinate.x && targetCoordinate.y == coordinate.y) {
                 return true;
             }
@@ -89,18 +90,18 @@ class PositionHelper {
             throw new IllegalArgumentException("currentCoordinate is invalid");
         }
         float min = Float.MAX_VALUE;
-        Iterator iterator = this.positionSet.getIterator();
-        int targetPosition = SlidingView.POSITION_INITIAL;
+        Iterator iterator = this.positionManager.getIterator();
+        int targetPositionId = PositionManager.POSITION_INITIAL;
         while (iterator.hasNext()) {
-            Map.Entry<Integer, Coordinate> entry = (Map.Entry<Integer, Coordinate>) iterator.next();
-            Coordinate targetCoordinate = entry.getValue();
+            Position position = (Position) iterator.next();
+            Coordinate targetCoordinate = position.getCoordinate();
             float distance = Coordinate.computeDistance(targetCoordinate, coordinate);
             if (distance < min) {
                 min = distance;
-                targetPosition = entry.getKey();
+                targetPositionId = position.getId();
             }
         }
-        return targetPosition;
+        return targetPositionId;
     }
 
     /**
@@ -136,22 +137,22 @@ class PositionHelper {
      */
     public int guessPosition(final Coordinate start, final Coordinate end) {
         if (start == null || end == null) {
-            throw new IllegalArgumentException("coordinate is invalid");
+            throw new IllegalCoordinate("coordinate is null");
         }
         //精度取5度
         final float precision = (float) Math.abs(Math.cos(Math.PI / 2) - Math.cos(Math.PI / 18 * 19));
-        int guess = positionSet.getCurrentPositionId();
+        int guess = positionManager.getCurrentPositionId();
         Vector vector1 = new Vector(start, end);
         float maxCos = Float.MIN_VALUE;
         float minDis = Float.MAX_VALUE;
-        Iterator<Map.Entry<Integer, Coordinate>> iterator = this.positionSet.getIterator();
+        Iterator iterator = this.positionManager.getIterator();
         while (iterator.hasNext()) {
-            Map.Entry<Integer, Coordinate> entry = iterator.next();
-            Coordinate coordinate = entry.getValue();
+            Position position = (Position) iterator.next();
+            Coordinate coordinate = position.getCoordinate();
             Vector vector2 = new Vector(start, coordinate);
             float cos = Vector.computeCos(vector1, vector2);
             //判断是否是当前位置
-            if (entry.getKey() == positionSet.getCurrentPositionId()) {
+            if (position.getId() == positionManager.getCurrentPositionId()) {
                 continue;
             }
             //判断是否在0度到45度之间
@@ -162,13 +163,13 @@ class PositionHelper {
             if ((cos - maxCos) > precision) {
                 maxCos = cos;
                 minDis = Coordinate.computeDistance(end, coordinate);
-                guess = entry.getKey();
+                guess = position.getId();
             }
             //判断cos是否等于maxCos且距离更小
             if (Math.abs(cos - maxCos) < precision && Coordinate.computeDistance(end, coordinate) < minDis) {
                 maxCos = cos;
                 minDis = Coordinate.computeDistance(end, coordinate);
-                guess = entry.getKey();
+                guess = position.getId();
             }
         }
         return guess;
@@ -201,9 +202,9 @@ class PositionHelper {
         }
 
         int desire = guessPosition(start, end);
-        int guess = this.positionSet.getCurrentPositionId();
+        int guess = this.positionManager.getCurrentPositionId();
 
-        Coordinate coordinate = this.positionSet.getPosition(desire);
+        Coordinate coordinate = this.positionManager.findPositionById(guess).getCoordinate();
         float currentDistance = Coordinate.computeDistance(start, end);
         float totalDistance = Coordinate.computeDistance(start, coordinate);
 
