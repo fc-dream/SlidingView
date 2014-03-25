@@ -1,5 +1,4 @@
 //TODO 在开启硬件加速的情况下不似乎不需要开启绘制缓存
-//TODO 用SparseArray代替PositionSet中的Map
 //TODO 统一代码规范，变量名和方法参数的final
 package com.kohoh.SlidingView;
 
