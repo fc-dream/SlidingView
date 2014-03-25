@@ -29,16 +29,6 @@ public class Vector {
     }
 
     /**
-     * 已知两点求向量
-     *
-     * @param start 起点
-     * @param end   终点
-     */
-    public Vector(Coordinate start, Coordinate end) {
-        this(end.x - start.x, end.y - start.y);
-    }
-
-    /**
      * 求两向量间的夹角的余玄
      *
      * @param v1 向量1

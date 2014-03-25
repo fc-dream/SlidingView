@@ -1,13 +1,15 @@
 package com.kohoh.SlidingView;
 
 import android.util.SparseArray;
+
 import com.kohoh.Exception.IllegalPosition;
+
 import java.util.Iterator;
 
 /**
  * 位置集合。
  * <p>该类内部提供了一个Map来管理所有的位置信息。该Map以位置对应的Id作为key，位置对应的坐标作为
- * value。你可以通过{@link #addPosition(int, Coordinate)}和{@link #removePositionById(int)}来增加和移
+ * value。你可以通过{@link #addPosition(int, int, int)}和{@link #removePositionById(int)}来增加和移
  * 除位置。注意的是，该Map中默认有一个初始位
  * 置。其位置对应的Id为{@link #POSITION_INITIAL},因此请不要添加以-1为Id的位置。初始位置的坐标只
  * 能在构建PositionManager时设置 </p>
@@ -18,21 +20,22 @@ public class PositionManager {
      * 构建一个PositionManager，并且设置初始位置为(0,0)
      */
     public PositionManager() {
-        this(new Coordinate(0, 0));
+        this(new Position(0, 0));
     }
 
     /**
      * 构建一个PositionManager,并设置初始位置
      *
-     * @param initialCoordinate 初始位置对应的坐标
+     * @param initialPosition 初始位置对应的坐标
      */
-    public PositionManager(Coordinate initialCoordinate) {
+    public PositionManager(Position initialPosition) {
         positionSparseArray = new SparseArray<Position>();
-        addPosition(new Position(POSITION_INITIAL, initialCoordinate));
+        initialPosition.setId(POSITION_INITIAL);
+        addPosition(initialPosition);
     }
 
     public PositionManager(final int initialX, final int initialY) {
-        this(new Coordinate(initialX, initialY));
+        this(new Position(POSITION_INITIAL, initialX, initialY));
     }
 
     public boolean isIdExisted(int id) {
@@ -72,19 +75,13 @@ public class PositionManager {
      *
      * @param currentPosition 当前位置
      */
-    public void setCurrentPositionId(int currentPosition) {
-        this.currentPositionId = currentPosition;
-    }
-
-    /**
-     * 增加一个位置
-     *
-     * @param id         位置所对应的Id。请不要设置为-1，-1默认为初始位置对应的Id。
-     * @param coordinate 位置所对应的坐标
-     * @return true 成功增加位置
-     */
-    public boolean addPosition(int id, Coordinate coordinate) {
-        return addPosition(new Position(id, coordinate));
+    public boolean setCurrentPositionId(int currentPosition) {
+        if (!isIdExisted(currentPositionId)) {
+            return false;
+        } else {
+            this.currentPositionId = currentPosition;
+            return true;
+        }
     }
 
     public boolean addPosition(int id, int x, int y) {
@@ -96,12 +93,11 @@ public class PositionManager {
             throw new IllegalPosition("position is null");
         }
 
-        if (isIdExisted(position.id)) {
-            throw new IllegalPosition("position'id is existed");
+        if (isIdExisted(position.getId())) {
+            return false;
         }
 
-        if(isIdExisted(position.id))
-        {
+        if (position.getId() == Integer.MIN_VALUE) {
             return false;
         }
 
@@ -121,8 +117,7 @@ public class PositionManager {
             throw new IllegalPosition("can't remove initial position");
         }
 
-        if(isIdExisted(positionId))
-        {
+        if (isIdExisted(positionId)) {
             return false;
         }
         positionSparseArray.remove(positionId);
@@ -184,12 +179,11 @@ public class PositionManager {
         Iterator iterator = getIterator();
         while (iterator.hasNext()) {
             Position position = (Position) iterator.next();
-            Coordinate coordinate = position.getCoordinate();
 
-            this.leftBound = Math.min(this.leftBound, coordinate.x);
-            this.rightBound = Math.max(this.rightBound, coordinate.x);
-            this.topBound = Math.max(this.topBound, coordinate.y);
-            this.bottomBound = Math.min(this.bottomBound, coordinate.y);
+            this.leftBound = Math.min(this.leftBound, position.getX());
+            this.rightBound = Math.max(this.rightBound, position.getX());
+            this.topBound = Math.max(this.topBound, position.getY());
+            this.bottomBound = Math.min(this.bottomBound, position.getY());
         }
 
         this.leftBound = Math.min(this.leftBound, customLeftBound);

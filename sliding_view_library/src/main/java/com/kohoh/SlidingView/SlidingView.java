@@ -21,6 +21,7 @@ import android.view.animation.Interpolator;
 import android.widget.FrameLayout;
 import android.widget.Scroller;
 
+import com.kohoh.Exception.IllegalPosition;
 import com.kohoh.util.GestureUtil;
 
 import java.util.HashSet;
@@ -389,9 +390,9 @@ public class SlidingView extends FrameLayout {
              */
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
-                Coordinate coordinate = transformCoordinate(getScrollX(), getScrollY());
-                if (!isDragging && !mPositionHelper.isAtPosition(coordinate)) {
-                    int position = mPositionHelper.guessPosition(coordinate);
+                Position currentPosition = transformPosition(getScrollX(), getScrollY());
+                if (!isDragging && !mPositionHelper.isAtPosition(currentPosition)) {
+                    int position = mPositionHelper.guessPosition(currentPosition);
                     switchPosition(position, true, true, 0);
                 }
                 break;
@@ -467,15 +468,15 @@ public class SlidingView extends FrameLayout {
                     final float velocityY = VelocityTrackerCompat.getYVelocity(
                             mVelocityTracker, mActivePointerId);
                     float velocity = (float) Math.sqrt(Math.pow(velocityX, 2) + Math.pow(velocityY, 2));
-                    Coordinate start = transformCoordinate(mInitialScrollX, mInitialScrollY);
-                    Coordinate end = transformCoordinate(getScrollX(), getScrollY());
+                    Position start = transformPosition(mInitialScrollX, mInitialScrollY);
+                    Position end = transformPosition(getScrollX(), getScrollY());
                     //根据滑动的速率、初始位置、现在的位置，决定要到达的目标位置
                     int position = mPositionHelper.guessPosition(velocity, start, end);
                     switchPosition(position, true, true, (int) velocityX, (int) velocityY);
-                } else if (!mPositionHelper.isAtPosition(transformCoordinate(getScrollX(), getScrollY()))) {
+                } else if (!mPositionHelper.isAtPosition(transformPosition(getScrollX(), getScrollY()))) {
                     //如果没有滑动，但也不再任意一个目标位置，那么就找一个最近的位置作为要到达的目标位置
-                    Coordinate coordinate = transformCoordinate(getScrollX(), getScrollY());
-                    int poition = mPositionHelper.guessPosition(coordinate);
+                    Position position = transformPosition(getScrollX(), getScrollY());
+                    int poition = mPositionHelper.guessPosition(position);
                     switchPosition(poition, true, true, 0);
                 }
                 endDrag();
@@ -618,8 +619,8 @@ public class SlidingView extends FrameLayout {
         } else {
             if (isSwitching) {
                 isSwitching = false;
-                Coordinate coordinate = transformCoordinate(getScrollX(), getScrollY());
-                if (mPositionHelper.isAtPosition(coordinate)) {
+                Position position = transformPosition(getScrollX(), getScrollY());
+                if (mPositionHelper.isAtPosition(position)) {
                     if (mSwitchedListener != null) {
                         mSwitchedListener.onSwitched(mPositionManager.getCurrentPositionId());
                     }
@@ -678,11 +679,11 @@ public class SlidingView extends FrameLayout {
             return;
         }
 
-        Coordinate targetCoordinate = transformCoordinate(this.mPositionManager.findPositionById(
-                targetPositionId).getCoordinate());
+        Position targetPosition = transformPosition(this.mPositionManager.findPositionById(
+                targetPositionId));
         int currentPositionId = mPositionManager.getCurrentPositionId();
 
-        if (targetCoordinate == null) {
+        if (targetPosition == null) {
             return;
         }
 
@@ -693,9 +694,9 @@ public class SlidingView extends FrameLayout {
         mPositionManager.setCurrentPositionId(targetPositionId);
         completeSwitch();
         if (smoothAnim) {
-            smoothScrollTo(targetCoordinate.x, targetCoordinate.y, velocity);
+            smoothScrollTo(targetPosition.getX(), targetPosition.getY(), velocity);
         } else {
-            scrollTo(targetCoordinate.x, targetCoordinate.y);
+            scrollTo(targetPosition.getY(), targetPosition.getY());
         }
     }
 
@@ -851,24 +852,24 @@ public class SlidingView extends FrameLayout {
     }
 
     /**
-     * 将坐标进行坐标系的转换
+     * 将位置进行坐标系的转换
      *
-     * @param oldCoordinate
+     * @param oldPosition
      * @return
      */
-    private Coordinate transformCoordinate(final Coordinate oldCoordinate) {
-        if (oldCoordinate == null) {
-            throw new IllegalArgumentException("coordinate is invaild");
+    private Position transformPosition(final Position oldPosition) {
+        if (oldPosition == null) {
+            throw new IllegalPosition("position is null");
         }
 
-        return new Coordinate((0 - oldCoordinate.x), oldCoordinate.y);
+        return new Position((0 - oldPosition.getX()), oldPosition.getY());
     }
 
     /**
      * 将坐标进行坐标系的转换
      */
-    private Coordinate transformCoordinate(final int x, final int y) {
-        return this.transformCoordinate(new Coordinate(x, y));
+    private Position transformPosition(final int x, final int y) {
+        return this.transformPosition(new Position(x, y));
     }
 
     /**
