@@ -6,15 +6,22 @@ import com.kohoh.Exception.IllegalPosition;
 
 import java.util.Iterator;
 
-/**
- * 位置集合。
- * <p>该类内部提供了一个Map来管理所有的位置信息。该Map以位置对应的Id作为key，位置对应的坐标作为
- * value。你可以通过{@link #addPosition(int, int, int)}和{@link #removePositionById(int)}来增加和移
- * 除位置。注意的是，该Map中默认有一个初始位
- * 置。其位置对应的Id为{@link #POSITION_INITIAL},因此请不要添加以-1为Id的位置。初始位置的坐标只
- * 能在构建PositionManager时设置 </p>
- */
 public class PositionManager {
+
+    /**
+     * 初始位置对应的Id
+     */
+    public static final int POSITION_INITIAL = -1;
+    private SparseArray<Position> positionSparseArray;
+    private int leftBound = Integer.MAX_VALUE;
+    private int topBound = Integer.MIN_VALUE;
+    private int rightBound = Integer.MIN_VALUE;
+    private int bottomBound = Integer.MAX_VALUE;
+    private int currentPositionId = POSITION_INITIAL;
+    private int customLeftBound = Integer.MAX_VALUE;
+    private int customRightBound = Integer.MIN_VALUE;
+    private int customTopBound = Integer.MIN_VALUE;
+    private int customBottomBound = Integer.MAX_VALUE;
 
     /**
      * 构建一个PositionManager，并且设置初始位置为(0,0)
@@ -34,10 +41,21 @@ public class PositionManager {
         addPosition(initialPosition);
     }
 
+    /**
+     * 构建一个PositionManager,并设置初始位置
+     *
+     * @param initialX 初始位置的x轴坐标
+     * @param initialY 初始位置的y轴坐标
+     */
     public PositionManager(final int initialX, final int initialY) {
         this(new Position(POSITION_INITIAL, initialX, initialY));
     }
 
+    /**
+     * 判断该id是否已经被占用
+     *
+     * @return true 已经被占用
+     */
     public boolean isIdExisted(int id) {
         if (positionSparseArray == null) {
             throw new RuntimeException("positionSparesArray is null");
@@ -46,48 +64,47 @@ public class PositionManager {
         return (positionSparseArray.indexOfKey(id) >= 0);
     }
 
-    /**
-     * 初始位置对应的Id
-     */
-    public static final int POSITION_INITIAL = -1;
-    private SparseArray<Position> positionSparseArray;
-    private int leftBound = Integer.MAX_VALUE;
-    private int topBound = Integer.MIN_VALUE;
-    private int rightBound = Integer.MIN_VALUE;
-    private int bottomBound = Integer.MAX_VALUE;
-    private int currentPositionId = POSITION_INITIAL;
-    private int customLeftBound = Integer.MAX_VALUE;
-    private int customRightBound = Integer.MIN_VALUE;
-    private int customTopBound = Integer.MIN_VALUE;
-    private int customBottomBound = Integer.MAX_VALUE;
 
     /**
-     * 获取当前位置
+     * 获取当前位置所对应的id
      *
-     * @return 当前位置
+     * @return 当前位置所对应的id
      */
     public int getCurrentPositionId() {
         return currentPositionId;
     }
 
     /**
-     * 设置当前位置
+     * 设置当前位置所对应的id
      *
-     * @param currentPosition 当前位置
+     * @param currentPositionId 当前位置所对应的id
      */
-    public boolean setCurrentPositionId(int currentPosition) {
-        if (!isIdExisted(currentPositionId)) {
+    public boolean setCurrentPositionId(int currentPositionId) {
+        if (!isIdExisted(this.currentPositionId)) {
             return false;
         } else {
-            this.currentPositionId = currentPosition;
+            this.currentPositionId = currentPositionId;
             return true;
         }
     }
 
+    /**
+     * 增加一个位置
+     *
+     * @param id 位置对应的id
+     * @param x  位置对应的x轴的坐标
+     * @param y  位置对应的y轴的坐标
+     * @return false 增加失败
+     */
     public boolean addPosition(int id, int x, int y) {
         return addPosition(new Position(id, x, y));
     }
 
+    /**
+     * 增加一个位置
+     *
+     * @return false 增加失败
+     */
     public boolean addPosition(Position position) {
         if (position == null) {
             throw new IllegalPosition("position is null");
@@ -107,10 +124,10 @@ public class PositionManager {
     }
 
     /**
-     * 移除一个位置
+     * 根据位置对应的id移除一个位置
      *
      * @param positionId 位置对应的Id
-     * @return true 成功移除位置
+     * @return false 移除失败
      */
     public boolean removePositionById(int positionId) {
         if (positionId == POSITION_INITIAL) {
@@ -126,7 +143,7 @@ public class PositionManager {
     }
 
     /**
-     * 获取对应Id的位置坐标
+     * 根据位置对应的id获取位置
      *
      * @param positionId 位置对应的Id
      * @return 位置对应的坐标
@@ -168,7 +185,7 @@ public class PositionManager {
     }
 
     /**
-     * 根据所有位置的坐标，设置所能到达的上下左右的最大范围
+     * 设置所能到达的上下左右的最大范围
      */
     private void setBound() {
         this.leftBound = Integer.MAX_VALUE;
@@ -192,6 +209,9 @@ public class PositionManager {
         this.bottomBound = Math.min(this.bottomBound, customBottomBound);
     }
 
+    /**
+     * 设置所能到达的上下左右的最大范围
+     */
     public void setBound(int left, int top, int right, int bottom) {
         this.customLeftBound = left;
         this.customRightBound = right;
@@ -201,36 +221,60 @@ public class PositionManager {
         setBound();
     }
 
+    /**
+     * 设置左侧最大范围
+     */
     public void setLeftBound(int bound) {
         setBound(bound, customTopBound, customRightBound, customBottomBound);
     }
 
+    /**
+     * 获取左侧最大范围
+     */
     public int getLeftBound() {
         return leftBound;
     }
 
+    /**
+     * 获取上侧最大范围
+     */
     public int getTopBound() {
         return topBound;
     }
 
+    /**
+     * 设置上侧最大范围
+     */
     public void setTopBound(int bound) {
         setBound(customLeftBound, bound, customRightBound, customBottomBound);
     }
 
+    /**
+     * 获取右侧最大范围
+     * @return
+     */
     public int getRightBound() {
         return rightBound;
     }
 
+    /**
+     * 设置右侧最大范围
+     */
     public void setRightBound(int bound) {
         setBound(customLeftBound, customTopBound, bound, customBottomBound);
     }
 
+    /**
+     * 获取下侧最大范围
+     */
     public int getBottomBound() {
         return bottomBound;
     }
 
+    /**
+     * 设置下侧最大范围
+     */
     public void setBottomBound(int bound) {
         setBound(customLeftBound, customTopBound, customRightBound, bound);
     }
-
 }

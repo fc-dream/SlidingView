@@ -1,5 +1,3 @@
-//TODO 在开启硬件加速的情况下不似乎不需要开启绘制缓存
-//TODO 统一代码规范，变量名和方法参数的final
 package com.kohoh.SlidingView;
 
 import android.content.Context;
@@ -64,18 +62,10 @@ public class SlidingView extends FrameLayout {
     private onSwitchedListener mSwitchedListener;
 
     /**
-     * 构建一个SlidingView。<br>
-     * 这会生成一个的默认样式如下的SlidingView
-     * <ol>
-     * <p/>
-     * <li>允许滑动</li>
-     * <li>允许拖拽</li>
-     * <li>不允许强制拦截手势</li>
-     * <li>初始位置为[0,0]</li>
-     * <li>滑动范围被限制在距离初始位置周围0个坐标范围内</li>
-     * </ol>
+     * 构建一个SlidingView。
      *
      * @param context 想关联的Context
+     * @see #SlidingView(android.content.Context, int, int)
      */
     public SlidingView(Context context) {
         this(context, 0, 0);
@@ -89,7 +79,6 @@ public class SlidingView extends FrameLayout {
      * <li>允许滑动</li>
      * <li>允许拖拽</li>
      * <li>不允许强制拦截手势</li>
-     * <li>滑动范围被限制在距离初始位置周围0个坐标范围内</li>
      * </ol>
      *
      * @param context  想关联的Context
@@ -107,39 +96,23 @@ public class SlidingView extends FrameLayout {
     }
 
     /**
-     * 构建一个SlidingView，一般当你在.xml中声明该类时，系统会调用这个构建函数。<br>
-     * 如果你没有设置额外的属性，那么他的默认样式是
-     * <ol>
-     * <p/>
-     * <li>允许滑动</li>
-     * <li>允许拖拽</li>
-     * <li>不允许强制拦截手势</li>
-     * <li>初始位置为[0,0]</li>
-     * <li>滑动范围被限制在距离初始位置周围0个坐标范围内</li>
-     * </ol>
+     * 构建一个SlidingView，一般当你在.xml中声明该类时，系统会调用这个构建函数。
      *
      * @param context 想关联的Context
      * @param attrs   从.xml文件中获取的和布局相关的属性集合
+     * @see #SlidingView(android.content.Context, int, int)
      */
     public SlidingView(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
     /**
-     * 构建一个SlidingView，一般当你在.xml中声明该类时，系统会调用这个构建函数。<br>
-     * 如果你没有设置额外的属性，那么他的默认样式是
-     * <ol>
-     * <p/>
-     * <li>允许滑动</li>
-     * <li>允许拖拽</li>
-     * <li>不允许强制拦截手势</li>
-     * <li>初始位置为[0,0]</li>
-     * <li>滑动范围被限制在距离初始位置周围0个坐标范围内</li>
-     * </ol>
+     * 构建一个SlidingView，一般当你在.xml中声明该类时，系统会调用这个构建函数。
      *
      * @param context  想关联的Context
      * @param attrs    从.xml文件中获取的和布局相关的属性集合
      * @param defStyle 默认的设计样式的Id
+     * @see #SlidingView(android.content.Context, int, int)
      */
     public SlidingView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
@@ -169,7 +142,7 @@ public class SlidingView extends FrameLayout {
         final ViewConfiguration configuration = ViewConfiguration.get(context);
         mTouchSlop = ViewConfigurationCompat.getScaledPagingTouchSlop(configuration);
         mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
-
+        //TODO 在开启硬件加速的情况下不似乎不需要开启绘制缓存
     }
 
     /**
@@ -219,7 +192,7 @@ public class SlidingView extends FrameLayout {
     /**
      * 判断是否进行强制拦截手势
      * <p>如果返回true，则对于所有手势进行拦截<br>
-     * 嵌套在内部的view将会接受不到任何手势<p/>
+     * 注意：此时嵌套在内部的view将会接受不到任何手势<p/>
      *
      * @return true 进行强制拦截手势
      */
@@ -230,7 +203,7 @@ public class SlidingView extends FrameLayout {
     /**
      * 设置是否进行强制拦截手势
      * <p>如果设置true，则对于所有手势进行拦截<br>
-     * 嵌套在内部的view将会接受不到任何手势<p/>
+     * 注意：此时嵌套在内部的view将会接受不到任何手势<p/>
      *
      * @param enable true 进行强制拦截手势
      */
@@ -242,11 +215,11 @@ public class SlidingView extends FrameLayout {
      * 增加一个SlidingView的目标位置
      * <p>SlidingView的默认坐标系是以视图左上角的点位原点。
      * <br>y轴方向向上增大，方向向下减小。
-     * <br>x轴方向向左增大，方向向右减小。
-     * <br>单位为像素。
-     * <br>如果你想要知道为什么会有这么奇葩的坐标系，那是因为我是以scrollX和scrollY为参考的。</br></p>
+     * <br>x轴方向向右增大，方向向左减小。
+     * <br>单位为像素。</p>
      *
-     * @param id 目标位置的Id号，通过这个Id你可以简单的标识目标位置。请不要将Id设置为-1，这已经被占用。
+     * @param id 目标位置的Id号，通过这个Id你可以简单的标识目标位置。请不要将Id设置为
+     *           {@link PositionManager#POSITION_INITIAL},或设置为{@link Integer#MIN_VALUE}也是无效的
      * @param x  目标位置的x轴坐标，单位像素
      * @param y  目标位置的y轴坐标，单位像素
      */
@@ -256,11 +229,10 @@ public class SlidingView extends FrameLayout {
 
     /**
      * 获取SlidingView的初始位置坐标
-     * <p>采用的坐标系和{@link #addPosition(int, int, int)}的相同，单位为像素。通过
-     * {@link #SlidingView(android.content.Context, int, int)}或者.xml中的initialX和initialY属性，
-     * 可以设置SlidingView的初始位置</p>
+     * 初始位置只能通过通过{@link #SlidingView(android.content.Context, int, int)}或者.xml中的
+     * initialX和initialY属性设置</p>
      *
-     * @return SlidingView的初始位置坐标，如果为null的话，则没有这是初始位置坐标。
+     * @return SlidingView的初始位置坐标。
      */
     public Position getInitialPosition() {
         return this.mPositionManager.findPositionById(PositionManager.POSITION_INITIAL);
@@ -268,10 +240,7 @@ public class SlidingView extends FrameLayout {
 
     /**
      * 设置SlidingView的左侧滑动范围
-     * <p>取值范围为[initialX,~）,如果设置的范围小于initialX,则最终会视为无效。采用的坐标系和
-     * {@link #addPosition(int, int, int)}的相同，单位为像素。initialX和initialY是SlidingView的初始
-     * 位置对应的坐标。通过{@link #getInitialPosition()}可是获取SlidingView的初始位置。通过
-     * {@link #SlidingView(android.content.Context, int, int)}或者.xml中的initialX和initialY属性，
+     * <p>取值范围为(~,initialX],如果设置的范围大于initialX,则最终会视为无效。
      * 可以设置SlidingView的初始位置</p>
      *
      * @param bound 左侧滑动范围
@@ -292,10 +261,7 @@ public class SlidingView extends FrameLayout {
 
     /**
      * 设置SlidingView的右侧滑动范围
-     * <p>取值范围为(~,initialX],如果设置的范围大于initialX,则最终会视为无效。采用的坐标系和
-     * {@link #addPosition(int, int, int)}的相同，单位为像素。initialX和initialY是SlidingView的初始
-     * 位置对应的坐标。通过{@link #getInitialPosition()}可是获取SlidingView的初始位置。通过
-     * {@link #SlidingView(android.content.Context, int, int)}或者.xml中的initialX和initialY属性，
+     * <p>取值范围为[initialX,~),如果设置的范围小于initialX,则最终会视为无效。
      * 可以设置SlidingView的初始位置</p>
      *
      * @param bound 右侧滑动范围
@@ -316,11 +282,7 @@ public class SlidingView extends FrameLayout {
 
     /**
      * 设置SlidingView的上侧滑动范围
-     * <p>取值范围为[initial,~）,如果设置的范围小于initialY,则最终会视为无效。采用的坐标系和
-     * {@link #addPosition(int, int, int)}的相同，单位为像素。initialX和initialY是SlidingView的初始
-     * 位置对应的坐标。通过{@link #getInitialPosition()}可是获取SlidingView的初始位置。通过
-     * {@link #SlidingView(android.content.Context, int, int)}或者.xml中的initialX和initialY属性，
-     * 可以设置SlidingView的初始位置</p>
+     * <p>取值范围为[initial,~）,如果设置的范围小于initialY,则最终会视为无效。</p>
      *
      * @param bound 顶侧滑动范围
      */
@@ -340,11 +302,7 @@ public class SlidingView extends FrameLayout {
 
     /**
      * 设置SlidingView的底侧滑动范围
-     * <p>取值范围为(~,initialY],如果设置的范围大于initialY,则最终会视为无效。采用的坐标系和
-     * {@link #addPosition(int, int, int)}的相同，单位为像素。initialX和initialY是SlidingView的初始
-     * 位置对应的坐标。通过{@link #getInitialPosition()}可是获取SlidingView的初始位置。
-     * 通过{@link #SlidingView(android.content.Context, int, int)}或者.xml中的initialX和initialY属性，
-     * 可以设置SlidingView的初始位置</p>
+     * <p>取值范围为(~,initialY],如果设置的范围大于initialY,则最终会视为无效。</p>
      *
      * @param bound 底侧滑动范围
      */
@@ -491,7 +449,7 @@ public class SlidingView extends FrameLayout {
 
     /**
      * 当要结束拖拽时，调用此方法。
-     * <p>在结束拖拽后，需要充值某些拖拽时使用的参数。这样才能保证下次拖拽顺利。</p>
+     * <p>在结束拖拽后，需要重制某些拖拽时使用的参数。这样才能保证下次拖拽顺利。</p>
      */
     private void endDrag() {
         isDragging = false;
@@ -657,10 +615,10 @@ public class SlidingView extends FrameLayout {
      * 将SlidingView切换到指定的目标位置
      * <p>默认开启动画效果，且进行强行切换</p>
      *
-     * @param targetPosition 目标位置对应的Id
+     * @param targetPositionId 目标位置对应的Id
      */
-    public void switchPosition(Integer targetPosition) {
-        switchPosition(targetPosition, true, true, 0);
+    public void switchPosition(int targetPositionId) {
+        switchPosition(targetPositionId, true, true, 0);
     }
 
     /**
@@ -716,10 +674,9 @@ public class SlidingView extends FrameLayout {
 
     /**
      * 决定是否开启绘制缓存。
-     * <p>在开启绘制缓存的情况下，会减少绘制的操作。进而使得滑动更加的平滑。但是在开启硬件加速的情况
-     * 下，完全没有必要开启绘制缓存。开启反倒会增加不必要的内存开销。<br>这里只是开启内部子视图的绘
-     * 制缓存。SlidingView在滑动过程中不断调用{@link #invalidate()},所以开启绘制缓存完全没有必要。反
-     * 倒是会增加运算的开销</p>
+     * <p>在开启绘制缓存的情况下，会减少绘制的操作。进而使得滑动更加的平滑。<br>这里只是开启内部子视
+     * 图的绘制缓存。SlidingView在滑动过程中不断调用{@link #invalidate()},所以开启绘制缓存完全没有必
+     * 要。反倒是会增加运算的开销</p>
      */
     private void setSlidingCacheEnable(boolean enable) {
 
@@ -824,6 +781,11 @@ public class SlidingView extends FrameLayout {
         return handle;
     }
 
+    /**
+     * 设置滑动完成监听器
+     *
+     * @param Listener
+     */
     public void setSwitchedListener(onSwitchedListener Listener) {
         this.mSwitchedListener = Listener;
     }
@@ -852,6 +814,7 @@ public class SlidingView extends FrameLayout {
 
     /**
      * 将位置进行坐标系的转换
+     * <p>进行转换是因为{@link PositionManager}采用的坐标系和scroll的坐标系不同</p>
      *
      * @param oldPosition
      * @return
@@ -866,6 +829,8 @@ public class SlidingView extends FrameLayout {
 
     /**
      * 将坐标进行坐标系的转换
+     *
+     * @see #transformPosition(Position)
      */
     private Position transformPosition(final int x, final int y) {
         return this.transformPosition(new Position(x, y));

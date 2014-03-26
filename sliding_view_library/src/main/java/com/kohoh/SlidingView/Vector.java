@@ -7,15 +7,15 @@ public class Vector {
     /**
      * 向量在x轴上的坐标
      */
-    int x;
+    private int x;
     /**
      * 向量在y轴上的坐标
      */
-    int y;
+    private int y;
     /**
      * 向量的模
      */
-    float length;
+    private float length;
 
     /**
      * @param x 向量在x轴上的坐标
@@ -43,5 +43,47 @@ public class Vector {
 
         float cos = cos1 * cos2 + sin1 * sin2;
         return cos;
+    }
+
+    /**
+     * 获取向量在x轴上的坐标
+     */
+    public int getX() {
+        return x;
+    }
+
+    /**
+     * 设置向量在x轴上的坐标
+     */
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    /**
+     * 获取向量在y轴上的坐标
+     */
+    public int getY() {
+        return y;
+    }
+
+    /**
+     * 设置向量在y轴上的坐标
+     */
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    /**
+     * 获取向量的模
+     */
+    public float getLength() {
+        return length;
+    }
+
+    /**
+     * 设置向量的模
+     */
+    public void setLength(float length) {
+        this.length = length;
     }
 }
