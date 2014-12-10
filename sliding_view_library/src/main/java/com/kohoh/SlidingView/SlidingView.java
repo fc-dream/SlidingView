@@ -26,40 +26,36 @@ import java.util.Iterator;
 import java.util.Set;
 
 public class SlidingView extends FrameLayout {
-    private static final boolean DEBUG = false;
-    private static final String TAG = "SlidingView";
-    private static final int MAX_SCROLLING_DURATION = 600; // in ms
-
-
-    private static final Interpolator sMenuInterpolator = new Interpolator() {
+    protected static final Interpolator sMenuInterpolator = new Interpolator() {
         @Override
         public float getInterpolation(float t) {
             t -= 1.0f;
             return (float) Math.pow(t, 5) + 1.0f;
         }
     };
-    private int mTouchSlop;
-
-    private int mMaximumVelocity;
-
-    private PositionManager mPositionManager;
-    private PositionHelper mPositionHelper;
-    private Scroller mScroller;
-    private boolean mEnableDrag;
-    private boolean isSwitching;
-    private boolean mEnableSlide;
-    private boolean isDragging;
-    private boolean mEnableInterceptAllGesture;
-    private boolean mSlidingCacheEnabled;
-    private VelocityTracker mVelocityTracker;
-    private static final int INVALID_POINTER = -1;
-    private int mActivePointerId = INVALID_POINTER;
-    private int mInitialScrollX;
-    private int mInitialScrollY;
-    private float mLastX;
-    private float mLastY;
-    private Set<View> mIgnoreViewSet;
-    private onSwitchedListener mSwitchedListener;
+    protected static final int INVALID_POINTER = -1;
+    protected int mActivePointerId = INVALID_POINTER;
+    private static final boolean DEBUG = false;
+    private static final String TAG = "SlidingView";
+    private static final int MAX_SCROLLING_DURATION = 600; // in ms
+    protected int mTouchSlop;
+    protected int mMaximumVelocity;
+    protected PositionManager mPositionManager;
+    protected PositionHelper mPositionHelper;
+    protected Scroller mScroller;
+    protected boolean mEnableDrag;
+    protected boolean isSwitching;
+    protected boolean mEnableSlide;
+    protected boolean isDragging;
+    protected boolean mEnableInterceptAllGesture;
+    protected boolean mSlidingCacheEnabled;
+    protected VelocityTracker mVelocityTracker;
+    protected int mInitialScrollX;
+    protected int mInitialScrollY;
+    protected float mLastX;
+    protected float mLastY;
+    protected Set<View> mIgnoreViewSet;
+    protected onSwitchedListener mSwitchedListener;
 
     /**
      * 构建一个SlidingView。
@@ -239,6 +235,16 @@ public class SlidingView extends FrameLayout {
     }
 
     /**
+     * 获取SlidingView的左侧滑动范围
+     *
+     * @return 左侧滑动范围
+     * @see #setLeftSlideBound(int)
+     */
+    public int getLeftSlideBound() {
+        return mPositionManager.getLeftBound();
+    }
+
+    /**
      * 设置SlidingView的左侧滑动范围
      * <p>取值范围为(~,initialX],如果设置的范围大于initialX,则最终会视为无效。
      * 可以设置SlidingView的初始位置</p>
@@ -250,13 +256,13 @@ public class SlidingView extends FrameLayout {
     }
 
     /**
-     * 获取SlidingView的左侧滑动范围
+     * 获取SlidingView的右侧滑动范围
      *
-     * @return 左侧滑动范围
-     * @see #setLeftSlideBound(int)
+     * @return 右侧滑动范围
+     * @see #setRightSlideBound(int)
      */
-    public int getLeftSlideBound() {
-        return mPositionManager.getLeftBound();
+    public int getRightSlideBound() {
+        return mPositionManager.getRightBound();
     }
 
     /**
@@ -271,13 +277,13 @@ public class SlidingView extends FrameLayout {
     }
 
     /**
-     * 获取SlidingView的右侧滑动范围
+     * 获取SlidingView的上侧滑动范围
      *
-     * @return 右侧滑动范围
-     * @see #setRightSlideBound(int)
+     * @return 顶侧滑动范围
+     * @see #setTopSlideBound(int)
      */
-    public int getRightSlideBound() {
-        return mPositionManager.getRightBound();
+    public int getTopSlideBound() {
+        return mPositionManager.getTopBound();
     }
 
     /**
@@ -291,13 +297,13 @@ public class SlidingView extends FrameLayout {
     }
 
     /**
-     * 获取SlidingView的上侧滑动范围
+     * 获取SlidingView的底侧滑动范围
      *
-     * @return 顶侧滑动范围
-     * @see #setTopSlideBound(int)
+     * @return SlidingView的底侧滑动范围
+     * @see #setBottomSlideBound(int)
      */
-    public int getTopSlideBound() {
-        return mPositionManager.getTopBound();
+    public int getBottomSlideBound() {
+        return mPositionManager.getBottomBound();
     }
 
     /**
@@ -308,16 +314,6 @@ public class SlidingView extends FrameLayout {
      */
     public void setBottomSlideBound(int bound) {
         mPositionManager.setBottomBound(bound);
-    }
-
-    /**
-     * 获取SlidingView的底侧滑动范围
-     *
-     * @return SlidingView的底侧滑动范围
-     * @see #setBottomSlideBound(int)
-     */
-    public int getBottomSlideBound() {
-        return mPositionManager.getBottomBound();
     }
 
     public void setBound(int left, int top, int right, int bottom) {
